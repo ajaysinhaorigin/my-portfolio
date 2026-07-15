@@ -1,0 +1,11 @@
+export { default as AboutSection } from "./about-section";
+export { default as ContactSection } from "./contact-section";
+export { default as ExperienceSection } from "./experience-section";
+export { default as FloatingCvButton } from "./floating-cv-button";
+export { default as Footer } from "./footer";
+export { default as HeroSection } from "./hero-section";
+export { default as LearningSection } from "./learning-section";
+export { default as ProjectsSection } from "./projects-section";
+export { default as SectionHeading } from "./section-heading";
+export { default as SkillsSection } from "./skills-section";
+export { default as SocialIcons } from "./social-icons";
