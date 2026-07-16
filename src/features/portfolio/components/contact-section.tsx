@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Download, Mail, MapPin, Phone, Send } from "lucide-react";
+import { ArrowUpRight, Mail, Send } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { siteConfig, socialLinks } from "@/features/portfolio/portfolio.data";
@@ -31,14 +31,18 @@ export default function ContactSection() {
     const body = encodeURIComponent(
       `${values.message}\n\n— ${values.name}\n${values.email}`,
     );
-    window.location.href = `mailto:${siteConfig.email}?subject=${subject}&body=${body}`;
+    const mailto = `mailto:${siteConfig.email}?subject=${subject}&body=${body}`;
+    const link = document.createElement("a");
+    link.href = mailto;
+    link.rel = "noopener noreferrer";
+    link.click();
     reset();
   };
 
   return (
     <section
       id="contact"
-      className="relative z-10 mx-auto w-full max-w-5xl scroll-mt-24 px-6 py-24"
+      className="relative z-10 mx-auto w-full max-w-[980px] scroll-mt-24 px-6 py-24"
     >
       <div className="mb-16 flex flex-col items-center text-center">
         <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-5xl">
@@ -50,86 +54,77 @@ export default function ContactSection() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          className="rounded-[2rem] border border-border bg-card p-2 shadow-2xl"
-        >
-          <div className="flex h-full flex-col rounded-[1.75rem] bg-background p-6 md:p-8">
-            <span className="mb-6 w-fit rounded-full border border-accent/20 bg-accent-soft px-3 py-1 text-xs font-bold tracking-wider text-accent">
-              LET&apos;S TALK
-            </span>
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        className="relative overflow-hidden rounded-[2rem] border border-border bg-card/40"
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.035]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+        />
+        <div className="pointer-events-none absolute -top-28 left-1/2 h-56 w-[70%] -translate-x-1/2 rounded-full bg-accent/12 blur-3xl" />
 
-            <p className="text-base font-light leading-relaxed text-muted-foreground">
-              Prefer email or LinkedIn? Reach out directly — I usually reply
-              within a day.
-            </p>
+        <div className="relative grid lg:grid-cols-[1fr_1.15fr]">
+          <div className="flex flex-col justify-between border-b border-border px-7 py-10 sm:px-10 lg:border-r lg:border-b-0 lg:py-12">
+            <div>
+              <p className="mb-6 text-sm font-light leading-relaxed text-muted-foreground">
+                Email me or send a short message — I
+                usually reply within a day.
+              </p>
 
-            <div className="mt-8 space-y-4">
               <a
                 href={`mailto:${siteConfig.email}`}
-                className="flex items-center gap-3 text-sm font-medium text-foreground transition-colors hover:text-accent"
+                className="group inline-flex items-center gap-2 text-xl font-semibold tracking-tight text-foreground transition-colors hover:text-accent sm:text-2xl"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted text-accent">
-                  <Mail className="h-4 w-4" />
-                </span>
                 {siteConfig.email}
+                <ArrowUpRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent" />
               </a>
-              <a
-                href={`tel:${siteConfig.phone}`}
-                className="flex items-center gap-3 text-sm text-muted-foreground transition-colors hover:text-accent"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted text-accent">
-                  <Phone className="h-4 w-4" />
-                </span>
-                {siteConfig.phone}
-              </a>
-              <p className="flex items-center gap-3 text-sm text-muted-foreground">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted text-accent">
-                  <MapPin className="h-4 w-4" />
-                </span>
+
+              <p className="mt-3 text-sm text-muted-foreground">
                 {siteConfig.location}
               </p>
             </div>
 
-            <div className="mt-auto space-y-6 pt-10">
+            <div className="mt-10 flex flex-wrap items-center gap-4">
               <SocialIcons links={socialLinks} />
-
-              <a
+              {/* <a
                 href={siteConfig.resumePath}
                 download
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-muted px-6 py-3 text-sm font-medium text-foreground transition-all hover:border-accent/30 hover:text-accent sm:w-auto"
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent"
               >
-                <Download className="h-4 w-4" />
+                <Download className="h-3.5 w-3.5" />
                 Download CV
-              </a>
+              </a> */}
             </div>
           </div>
-        </motion.div>
 
-        <motion.form
-          onSubmit={handleSubmit(onSubmit)}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ delay: 0.08 }}
-          className="rounded-[2rem] border border-border bg-card p-2 shadow-2xl"
-        >
-          <div className="rounded-[1.75rem] bg-background p-6 md:p-8">
-            <div className="grid gap-5 sm:grid-cols-2">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="px-7 py-10 sm:px-10 lg:py-12"
+          >
+            <div className="mb-6 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Mail className="h-4 w-4 text-accent" />
+              Send a message
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <label
                   htmlFor="name"
-                  className="text-sm font-medium text-foreground"
+                  className="text-xs font-medium tracking-wide text-muted-foreground uppercase"
                 >
                   Name
                 </label>
                 <input
                   id="name"
                   placeholder="Your name"
-                  className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-accent/50"
+                  className="w-full rounded-2xl border border-border bg-background/80 px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-accent/50"
                   {...register("name")}
                 />
                 {errors.name ? (
@@ -139,7 +134,7 @@ export default function ContactSection() {
               <div className="space-y-2">
                 <label
                   htmlFor="email"
-                  className="text-sm font-medium text-foreground"
+                  className="text-xs font-medium tracking-wide text-muted-foreground uppercase"
                 >
                   Email
                 </label>
@@ -147,7 +142,7 @@ export default function ContactSection() {
                   id="email"
                   type="email"
                   placeholder="you@example.com"
-                  className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-accent/50"
+                  className="w-full rounded-2xl border border-border bg-background/80 px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-accent/50"
                   {...register("email")}
                 />
                 {errors.email ? (
@@ -156,18 +151,18 @@ export default function ContactSection() {
               </div>
             </div>
 
-            <div className="mt-5 space-y-2">
+            <div className="mt-4 space-y-2">
               <label
                 htmlFor="message"
-                className="text-sm font-medium text-foreground"
+                className="text-xs font-medium tracking-wide text-muted-foreground uppercase"
               >
                 Message
               </label>
               <textarea
                 id="message"
-                rows={5}
+                rows={4}
                 placeholder="Tell me about the role, product, or idea..."
-                className="w-full resize-none rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-accent/50"
+                className="w-full resize-none rounded-2xl border border-border bg-background/80 px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-accent/50"
                 {...register("message")}
               />
               {errors.message ? (
@@ -178,14 +173,14 @@ export default function ContactSection() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-8 py-3 text-sm font-medium text-white shadow-[0_0_15px_rgba(255,107,53,0.25)] transition-all hover:bg-orange-mid hover:shadow-[0_0_25px_rgba(255,107,53,0.4)] disabled:opacity-60 sm:w-auto"
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-7 py-3 text-sm font-semibold text-white shadow-[0_0_0_1px_rgba(255,107,53,0.2),0_8px_24px_-6px_rgba(255,107,53,0.45)] transition-all hover:bg-orange-mid hover:shadow-[0_0_0_1px_rgba(255,107,53,0.3),0_12px_28px_-4px_rgba(255,107,53,0.5)] disabled:opacity-60 sm:w-auto"
             >
               <Send className="h-4 w-4" />
               Send message
             </button>
-          </div>
-        </motion.form>
-      </div>
+          </form>
+        </div>
+      </motion.div>
     </section>
   );
 }

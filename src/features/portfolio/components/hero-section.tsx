@@ -201,7 +201,7 @@ export default function HeroSection() {
           <a
             href={siteConfig.resumePath}
             download
-            className="group inline-flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-card/60 px-7 text-sm font-semibold text-foreground backdrop-blur-md transition-all duration-300 hover:border-foreground/25 hover:bg-card"
+            className="group inline-flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-card/60 px-7 text-sm font-semibold text-foreground backdrop-blur-md transition-all duration-300  hover:border-accent/40 hover:text-accent"
           >
             <Download className="h-4 w-4 text-muted-foreground transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:text-accent" />
             Download CV
