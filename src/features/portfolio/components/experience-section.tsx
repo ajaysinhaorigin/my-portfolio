@@ -2,67 +2,75 @@
 
 import { motion } from "framer-motion";
 import { experience } from "@/features/portfolio/portfolio.data";
-import { Badge } from "@/shared/components/ui";
-import SectionHeading from "./section-heading";
 
 export default function ExperienceSection() {
   return (
-    <section id="experience" className="scroll-mt-24 py-20 sm:py-28">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          eyebrow="Experience"
-          title="Where I've been building"
-          description="Startup environments, rapid demos, and full ownership across the stack."
-        />
+    <section
+      id="experience"
+      className="relative z-10 mx-auto w-full max-w-5xl scroll-mt-24 px-6 py-24"
+    >
+      <div className="mb-16 flex flex-col items-center text-center">
+        <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-5xl">
+          Experience
+        </h2>
+        <p className="max-w-xl text-lg font-light text-muted-foreground">
+          Roles where I owned delivery across product, frontend, backend, and
+          mobile.
+        </p>
+      </div>
 
-        <div className="relative space-y-8 before:absolute before:left-[11px] before:top-2 before:h-[calc(100%-1rem)] before:w-px before:bg-border sm:before:left-[15px]">
-          {experience.map((job, index) => (
-            <motion.article
-              key={`${job.company}-${job.period}`}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.25 }}
-              transition={{ delay: index * 0.1, duration: 0.45 }}
-              className="relative pl-10 sm:pl-12"
-            >
-              <span className="absolute left-0 top-2 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background sm:h-8 sm:w-8">
-                <span className="h-2.5 w-2.5 rounded-full bg-accent" />
-              </span>
+      <div className="space-y-0">
+        {experience.map((job, index) => (
+          <motion.article
+            key={`${job.company}-${job.period}`}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ delay: index * 0.08 }}
+            className="group border-t border-border py-10 first:border-t-0 first:pt-0 md:py-14 md:first:pt-0"
+          >
+            <div className="grid gap-8 md:grid-cols-[200px_1fr] md:gap-12">
+              <div className="md:pt-1">
+                <p className="text-sm font-medium text-muted-foreground">
+                  {job.period}
+                </p>
+                {job.current ? (
+                  <span className="mt-3 inline-flex rounded-full border border-accent/20 bg-accent-soft px-3 py-1 text-[11px] font-bold tracking-wider text-accent">
+                    CURRENT
+                  </span>
+                ) : null}
+              </div>
 
-              <div className="rounded-2xl border border-border bg-card p-6 transition-all hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {job.role}
-                    </h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {job.company} · {job.location}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {job.current ? (
-                      <Badge variant="accent">Current</Badge>
-                    ) : null}
-                    <Badge variant="muted">{job.period}</Badge>
-                  </div>
-                </div>
+              <div>
+                <h3 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+                  {job.role}
+                </h3>
+                <p className="mt-2 text-base text-muted-foreground">
+                  <span className="font-medium text-foreground/85">
+                    {job.company}
+                  </span>
+                  <span className="mx-2 text-border">·</span>
+                  {job.location}
+                </p>
 
-                <ul className="mt-5 space-y-3">
+                <ul className="mt-8 space-y-4">
                   {job.highlights.map((highlight) => (
                     <li
                       key={highlight}
-                      className="flex gap-3 text-sm leading-relaxed text-muted-foreground"
+                      className="flex gap-3 text-sm leading-relaxed text-muted-foreground md:text-[15px]"
                     >
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent transition-transform group-hover:scale-125" />
                       <span>{highlight}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-            </motion.article>
-          ))}
-        </div>
+            </div>
+          </motion.article>
+        ))}
       </div>
+
+      <div className="border-t border-border" />
     </section>
   );
 }

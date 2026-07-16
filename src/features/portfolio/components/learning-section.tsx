@@ -6,7 +6,6 @@ import type { LearningStatus } from "@/features/portfolio/portfolio.data";
 import { learningTopics } from "@/features/portfolio/portfolio.data";
 import { Badge } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
-import SectionHeading from "./section-heading";
 
 const statusStyles: Record<
   LearningStatus,
@@ -28,11 +27,15 @@ export default function LearningSection() {
   return (
     <section id="learning" className="scroll-mt-24 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          eyebrow="Learning"
-          title="What I'm studying next"
-          description="A living board of topics I'm deepening — add a card in one data file and it shows up here."
-        />
+        <div className="mb-16 flex flex-col items-center text-center">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-5xl">
+            What I&apos;m studying next
+          </h2>
+          <p className="max-w-xl text-lg font-light text-muted-foreground">
+            A living board of topics I&apos;m deepening — add a card in one data
+            file and it shows up here.
+          </p>
+        </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {learningTopics.map((topic, index) => {

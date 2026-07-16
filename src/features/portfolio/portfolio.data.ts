@@ -23,6 +23,10 @@ export type ProjectItem = {
   description: string;
   highlights: string[];
   tech: string[];
+  tag: string;
+  graphicId: "cloud" | "property";
+  liveUrl?: string;
+  githubUrl?: string;
   links?: { label: string; href: string }[];
 };
 
@@ -163,26 +167,34 @@ export const experience: ExperienceItem[] = [
 
 export const projects: ProjectItem[] = [
   {
-    title: "Cloud-Store",
+    title: "Cloud-Store Architecture",
     description:
-      "A modern and secure cloud storage application designed for seamless file management and collaboration.",
+      "A secure cloud storage application designed for seamless file management and team collaboration with real-time tracking.",
     highlights: [
-      "OTP-based authentication and real-time storage tracking with Next.js, MongoDB, and ShadCN.",
-      "Advanced search, result caching, and responsive file management workflows.",
-      "Secure cloud storage UX focused on speed and collaboration.",
+      "OTP-based secure authentication",
+      "Real-time storage tracking",
+      "Advanced search with Redis caching",
     ],
-    tech: ["Next.js", "MongoDB", "ShadCN/UI", "TypeScript"],
+    tech: ["Next.js 14", "MongoDB", "Tailwind", "Shadcn"],
+    tag: "WEB APP • 2024",
+    graphicId: "cloud",
+    liveUrl: "#",
+    githubUrl: "#",
   },
   {
-    title: "Property-Pulse",
+    title: "Property-Pulse Platform",
     description:
-      "A rental property platform that helps users find their next home with rich search and interactive features.",
+      "A comprehensive rental marketplace to assist users in finding properties with integrated mapping and real-time messaging.",
     highlights: [
-      "Google authentication, property CRUD, Cloudinary uploads, and advanced search.",
-      "Messaging, notifications, bookmarking, and maps integration.",
-      "Responsive UI workflows built for real-world rental discovery.",
+      "Interactive WebSocket messaging",
+      "Map-based property search",
+      "Google OAuth & Cloudinary integration",
     ],
-    tech: ["Next.js", "Cloudinary", "Google Auth", "Maps"],
+    tech: ["React", "Node.js", "PostgreSQL", "Maps API"],
+    tag: "FULLSTACK • 2023",
+    graphicId: "property",
+    liveUrl: "#",
+    githubUrl: "#",
   },
 ];
 

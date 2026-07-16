@@ -8,8 +8,10 @@ import ThemeToggle from "./theme-toggle";
 
 const pillLinks = [
   { label: "Home", href: "#home" },
+  { label: "Skills", href: "#skills" },
   { label: "Projects", href: "#projects" },
-  { label: "About", href: "#about" },
+  { label: "Experience", href: "#experience" },
+  { label: "Learning", href: "#learning" },
 ] as const;
 
 export default function Navbar() {
@@ -24,7 +26,14 @@ export default function Navbar() {
   }, [open]);
 
   useEffect(() => {
-    const sectionIds = ["home", "about", "projects", "contact"];
+    const sectionIds = [
+      "home",
+      "skills",
+      "projects",
+      "experience",
+      "learning",
+      "contact",
+    ];
     const onScroll = () => {
       const scrollY = window.scrollY + 120;
       for (const id of [...sectionIds].reverse()) {
