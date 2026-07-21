@@ -99,7 +99,12 @@ export default function Navbar() {
 
             <a
               href="#contact"
-              className="ml-1 rounded-full bg-accent px-5 py-2 text-sm font-bold text-white shadow-[0_0_15px_rgba(255,107,53,0.3)] transition-all hover:bg-orange-mid hover:shadow-[0_0_25px_rgba(255,107,53,0.5)]"
+              className={cn(
+                "ml-1 whitespace-nowrap rounded-full px-5 py-2 text-sm font-bold transition-all",
+                active === "#contact"
+                  ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]"
+                  : "bg-accent text-white shadow-[0_0_15px_rgba(255,107,53,0.3)] hover:bg-orange-mid hover:shadow-[0_0_25px_rgba(255,107,53,0.5)]",
+              )}
             >
               Let&apos;s Talk
             </a>
