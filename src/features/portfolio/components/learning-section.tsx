@@ -2,19 +2,9 @@
 
 import { motion } from "framer-motion";
 import { ArrowUpRight, Brain, Cloud, Network } from "lucide-react";
-import type { LearningStatus } from "@/features/portfolio/portfolio.data";
 import { learningTopics } from "@/features/portfolio/portfolio.data";
 import { Badge } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
-
-const statusStyles: Record<
-  LearningStatus,
-  { label: string; variant: "accent" | "warning" | "success" }
-> = {
-  "in-progress": { label: "In Progress", variant: "accent" },
-  planned: { label: "Planned", variant: "warning" },
-  completed: { label: "Completed", variant: "success" },
-};
 
 const iconMap = {
   dsa: Brain,
@@ -25,22 +15,21 @@ const iconMap = {
 
 export default function LearningSection() {
   return (
-    <section id="learning" className="scroll-mt-24 py-20 sm:py-28">
+    <section id="explore" className="scroll-mt-24 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-16 flex flex-col items-center text-center">
           <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground md:text-5xl">
-            What I&apos;m studying next
+            Explore
           </h2>
           <p className="max-w-xl text-lg font-light text-muted-foreground">
-            A living board of topics I&apos;m deepening — add a card in one data
-            file and it shows up here.
+            A curated space of engineering fundamentals and beyond — open to
+            explore.
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {learningTopics.map((topic, index) => {
             const Icon = iconMap[topic.icon] ?? iconMap.default;
-            const status = statusStyles[topic.status];
 
             return (
               <motion.article
@@ -55,11 +44,10 @@ export default function LearningSection() {
                   "transition-shadow hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5",
                 )}
               >
-                <div className="mb-5 flex items-start justify-between gap-3">
+                <div className="mb-5">
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <Badge variant={status.variant}>{status.label}</Badge>
                 </div>
 
                 <h3 className="text-lg font-semibold text-foreground">
@@ -78,7 +66,7 @@ export default function LearningSection() {
                 </div>
 
                 <div className="mt-5 flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors group-hover:text-accent">
-                  Learning in public
+                  Open
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </div>
               </motion.article>

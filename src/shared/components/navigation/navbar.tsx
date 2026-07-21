@@ -11,7 +11,7 @@ const pillLinks = [
   { label: "Skills", href: "#skills" },
   { label: "Projects", href: "#projects" },
   { label: "Experience", href: "#experience" },
-  { label: "Learning", href: "#learning" },
+  { label: "Explore", href: "#explore" },
 ] as const;
 
 export default function Navbar() {
@@ -31,11 +31,13 @@ export default function Navbar() {
       "skills",
       "projects",
       "experience",
-      "learning",
+      "explore",
       "contact",
     ];
+    // Threshold must exceed scroll-mt-24 (96px) so a section is detected
+    // right after an anchor jump, even if the layout shifts slightly.
     const onScroll = () => {
-      const scrollY = window.scrollY + 120;
+      const scrollY = window.scrollY + 160;
       for (const id of [...sectionIds].reverse()) {
         const el = document.getElementById(id);
         if (el && el.offsetTop <= scrollY) {
@@ -44,9 +46,19 @@ export default function Navbar() {
         }
       }
     };
+    const onHashChange = () => {
+      if (sectionIds.includes(window.location.hash.slice(1))) {
+        setActive(window.location.hash);
+      }
+    };
     onScroll();
+    onHashChange();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("hashchange", onHashChange);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("hashchange", onHashChange);
+    };
   }, []);
 
   return (

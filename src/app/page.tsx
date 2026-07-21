@@ -1,7 +1,6 @@
 import {
   ContactSection,
   ExperienceSection,
-  FloatingCvButton,
   Footer,
   HeroSection,
   LearningSection,
@@ -19,7 +18,6 @@ export default function HomePage() {
       <LearningSection />
       <ContactSection />
       <Footer />
-      {/* <FloatingCvButton /> */}
     </>
   );
 }

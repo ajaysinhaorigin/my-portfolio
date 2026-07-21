@@ -62,7 +62,7 @@ export const navLinks = [
   { label: "Skills", href: "#skills" },
   { label: "Experience", href: "#experience" },
   { label: "Projects", href: "#projects" },
-  { label: "Learning", href: "#learning" },
+  { label: "Explore", href: "#explore" },
   { label: "Contact", href: "#contact" },
 ] as const;
 
@@ -202,15 +202,15 @@ export const learningTopics: LearningTopic[] = [
   {
     title: "Data Structures & Algorithms",
     description:
-      "Daily problem-solving focused on patterns, complexity, and interview readiness — arrays, trees, graphs, and DP.",
+      "Problem patterns, data structures, and algorithmic thinking — organized by topic and complexity.",
     status: "in-progress",
     icon: "dsa",
-    tags: ["LeetCode", "Patterns", "Complexity"],
+    tags: ["Patterns", "Complexity", "Problem Solving"],
   },
   {
     title: "System Design",
     description:
-      "High-level and low-level design for scalable systems — caching, queues, databases, and real-world fintech architectures.",
+      "Architecture, scalability, and design trade-offs — spanning frontend and backend systems.",
     status: "in-progress",
     icon: "system-design",
     tags: ["HLD", "LLD", "Scalability"],
@@ -218,10 +218,10 @@ export const learningTopics: LearningTopic[] = [
   {
     title: "AWS Cloud",
     description:
-      "Hands-on cloud fundamentals: compute, storage, networking, IAM, and deploying production-ready services.",
+      "Cloud services, infrastructure patterns, and deployment — organized by use case.",
     status: "planned",
     icon: "aws",
-    tags: ["EC2", "S3", "IAM"],
+    tags: ["Infrastructure", "IAM", "Deployment"],
   },
 ];
 

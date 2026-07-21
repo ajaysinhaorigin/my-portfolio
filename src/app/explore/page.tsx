@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { LearningSection, Footer } from "@/features/portfolio";
 
 export const metadata: Metadata = {
-  title: "Learning",
+  title: "Explore",
   description:
-    "Topics Ajay Sinha is currently studying — DSA, System Design, AWS, and more.",
+    "Structured breakdowns of DSA, System Design, AWS, and more by Ajay Sinha.",
 };
 
-export default function LearningPage() {
+export default function ExplorePage() {
   return (
     <div className="pt-16">
       <LearningSection />
