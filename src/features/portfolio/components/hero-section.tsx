@@ -60,7 +60,7 @@ function OrbitRing({
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1.4, ease: "easeOut" }}
-        className={`absolute inset-0 rounded-full border ${ringClass}`}
+        className={`absolute inset-0 rounded-full border ${ringClass} mask-[linear-gradient(to_bottom,black_30%,rgba(0,0,0,0.35)_100%)]`}
       />
 
       <motion.div
@@ -107,23 +107,17 @@ export default function HeroSection() {
       id="home"
       className="relative flex min-h-[95vh] w-full flex-col items-center justify-center overflow-hidden pt-24"
     >
-      {/* Smooth layered background */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute inset-0 bg-background" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(255,107,53,0.07)_0%,transparent_65%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_28%,rgba(255,255,255,0.04)_0%,transparent_60%)]" />
       </div>
 
-      {/*
-        Size from reference (large), design from before:
-        quiet dashed/solid borders, no glow, subtle stars.
-      */}
       <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
-        {/* Outer — white ring + orange stars (bright + softer, both sharp & blinking) */}
         <OrbitRing
           sizeClass="h-[min(1400px,126vmin)] w-[min(1400px,126vmin)]"
           duration={55}
-          ringClass="border border-dashed border-foreground/[0.08] dark:border-white/[0.09]"
+          ringClass="border border-dashed border-foreground/[0.045] dark:border-white/[0.05]"
           starColor="color-mix(in oklab, var(--accent) 72%, white)"
           stars={[
             { angle: 15, sizeClass: "h-7 w-7 sm:h-8 sm:w-8" },
@@ -133,12 +127,11 @@ export default function HeroSection() {
           ]}
         />
 
-        {/* Middle — light orange ring + soft white stars */}
         <OrbitRing
           sizeClass="h-[min(920px,88vmin)] w-[min(920px,88vmin)]"
           duration={42}
           reverse
-          ringClass="border border-accent/15"
+          ringClass="border border-accent/[0.08]"
           starColor="color-mix(in oklab, white 70%, var(--foreground))"
           stars={[
             { angle: 40, sizeClass: "h-6 w-6 sm:h-7 sm:w-7" },
@@ -148,11 +141,10 @@ export default function HeroSection() {
           ]}
         />
 
-        {/* Inner — white ring + light orange stars */}
         <OrbitRing
           sizeClass="h-[min(540px,52vmin)] w-[min(540px,52vmin)]"
           duration={30}
-          ringClass="border border-dashed border-foreground/[0.09] dark:border-white/[0.1]"
+          ringClass="border border-dashed border-foreground/[0.05] dark:border-white/[0.055]"
           starColor="color-mix(in oklab, var(--accent) 65%, white)"
           stars={[
             { angle: 0, sizeClass: "h-5 w-5 sm:h-6 sm:w-6" },
