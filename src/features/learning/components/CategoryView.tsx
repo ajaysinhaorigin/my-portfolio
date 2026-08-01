@@ -43,8 +43,8 @@ export default function CategoryView({
           {titleCase(category)}
         </h1>
         <p className="mt-2 text-muted-foreground">
-          {articles.length} article{articles.length === 1 ? "" : "s"} in this
-          section
+          {articles.length} chapter{articles.length === 1 ? "" : "s"} in this
+          module
         </p>
       </div>
 

@@ -26,7 +26,10 @@ export default function TopicHub({ topic, sections }: TopicHubProps) {
         </h1>
         <p className="mt-3 max-w-2xl text-muted-foreground">{topic.description}</p>
         <p className="mt-4 text-sm text-muted-foreground">
-          {articles.length} articles across {sections.length} sections
+          {articles.length}{" "}
+          {articles.length === 1 ? "chapter" : "chapters"} across{" "}
+          {sections.length}{" "}
+          {sections.length === 1 ? "module" : "modules"}
         </p>
       </div>
 

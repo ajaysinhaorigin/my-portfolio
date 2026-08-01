@@ -1,7 +1,7 @@
 import { ArrowUpRight, Brain, Cloud, Cpu, Network, Server } from "lucide-react";
 import Link from "next/link";
+import { getNavigation } from "@/features/learning/config/navigation";
 import { topicList } from "@/features/learning/config/topics";
-import { getTopicArticles } from "@/features/learning/lib/content";
 import { Badge } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
 
@@ -32,8 +32,12 @@ export default function ExploreLanding() {
       <div className="grid gap-4 sm:grid-cols-2">
         {topicList.map((topic) => {
           const Icon = iconMap[topic.icon];
-          const articles =
-            topic.status === "available" ? getTopicArticles(topic.slug) : [];
+          const modules =
+            topic.status === "available" ? getNavigation(topic.slug) : [];
+          const chapterCount = modules.reduce(
+            (sum, section) => sum + section.items.length,
+            0,
+          );
           const isAvailable = topic.status === "available";
 
           const card = (
@@ -70,7 +74,7 @@ export default function ExploreLanding() {
               <div className="mt-6 flex items-center justify-between border-t border-border pt-4 text-sm">
                 <span className="text-muted-foreground">
                   {isAvailable
-                    ? `${articles.length} Topics`
+                    ? `${modules.length} ${modules.length === 1 ? "Module" : "Modules"} · ${chapterCount} Chapters`
                     : "In progress"}
                 </span>
                 {isAvailable ? (

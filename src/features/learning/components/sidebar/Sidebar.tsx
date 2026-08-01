@@ -54,8 +54,11 @@ export default function Sidebar({ topic, sections }: SidebarProps) {
           <div>
             <p className="text-sm font-semibold text-foreground">{topic.title}</p>
             <p className="text-xs text-muted-foreground">
+              {sections.length}{" "}
+              {sections.length === 1 ? "module" : "modules"}
+              {" · "}
               {sections.reduce((sum, section) => sum + section.items.length, 0)}{" "}
-              topics
+              chapters
             </p>
           </div>
         </div>
