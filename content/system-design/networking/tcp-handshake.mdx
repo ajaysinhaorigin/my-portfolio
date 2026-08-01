@@ -1,0 +1,133 @@
+---
+title: "TCP Three-Way Handshake"
+description: "Why clients and servers confirm a connection with SYN, SYN-ACK, and ACK before sending webpage data."
+difficulty: "beginner"
+readingTime: "9 mins"
+lastUpdated: "August 2026"
+category: "networking"
+tags: ["tcp", "networking", "handshake"]
+prerequisites: ["how-web-works", "dns"]
+relatedTopics: ["how-web-works", "dns", "tls-handshake", "http"]
+summary: "TCP creates a reliable connection using a three-way handshake. Both sides confirm they are ready before exchanging data."
+interviewQuestions:
+  - "Why is TCP handshake required?"
+  - "Explain SYN, SYN-ACK, and ACK."
+  - "When does the TCP handshake happen relative to DNS?"
+  - "What problem does TCP solve that a simple UDP send does not?"
+lectureSource:
+  course: "Namaste System Design"
+  instructor: "Akshay Saini"
+  status: "in-progress"
+  revisionCount: 1
+  confidence: 3
+---
+
+## Introduction
+
+Before sending any webpage data, the client and the server first create a reliable connection.
+
+This process is called the **TCP Three-Way Handshake**.
+
+TCP provides a reliable, ordered stream of bytes between two machines.
+
+<Callout type="definition">
+  **TCP (Transmission Control Protocol)** is a transport protocol that makes sure data arrives completely and in the correct order.
+</Callout>
+
+## Why Is It Needed?
+
+Imagine making a phone call.
+
+Before talking, both people first confirm that the call is connected.
+
+TCP works in a similar way.
+
+Both the client and the server first make sure they are ready before exchanging data.
+
+Without this step, one side might send data while the other is not listening yet.
+
+## When Does It Happen?
+
+Order of events:
+
+1. Browser has a URL.
+2. DNS (or cache) provides an IP address.
+3. **TCP handshake starts** using that IP and a port (usually `443` for HTTPS).
+4. TLS and HTTP happen after the TCP connection exists.
+
+<Callout type="remember">
+  TCP handshake happens **after DNS lookup**. Without an IP address, the browser doesn't know which server it should connect to.
+</Callout>
+
+## Three-Way Handshake
+
+```text
+Client                    Server
+
+SYN --------------------->
+
+         <--------------- SYN + ACK
+
+ACK --------------------->
+```
+
+<Mermaid
+  chart={`
+sequenceDiagram
+  participant Client
+  participant Server
+  Client->>Server: SYN
+  Server->>Client: SYN + ACK
+  Client->>Server: ACK
+  Note over Client,Server: Connection established
+`}
+  caption="SYN, SYN-ACK, and ACK establish a TCP connection"
+/>
+
+### SYN
+
+The client says:
+
+> "I want to start a connection."
+
+### SYN + ACK
+
+The server replies:
+
+> "I received your request and I'm ready."
+
+### ACK
+
+The client replies:
+
+> "Great! Let's start communicating."
+
+Now both sides are connected.
+
+## What TCP Guarantees
+
+After the handshake, TCP helps with:
+
+| Guarantee | Meaning |
+|-----------|---------|
+| Reliability | Lost packets are retransmitted |
+| Ordering | Bytes are delivered in order |
+| Connection state | Both sides know the session exists |
+
+Large HTTP responses are split into packets. Different packets may travel different routes. TCP reassembles them correctly before the browser processes them.
+
+## Key Takeaways
+
+- TCP creates a reliable connection before application data is sent.
+- The handshake uses three messages: SYN, SYN-ACK, ACK.
+- It happens after the IP address is known.
+- TCP handles retransmission and ordering of packets.
+- HTTPS still needs TCP underneath (then TLS on top).
+
+## Revision (30 Seconds)
+
+1. DNS gives an IP address.
+2. Client sends SYN.
+3. Server replies SYN + ACK.
+4. Client sends ACK.
+5. Reliable connection is ready for TLS / HTTP.

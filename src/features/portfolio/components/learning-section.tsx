@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowUpRight, Brain, Cloud, Network } from "lucide-react";
+import Link from "next/link";
 import { learningTopics } from "@/features/portfolio/portfolio.data";
 import { Badge } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
@@ -13,6 +14,12 @@ const iconMap = {
   default: Brain,
 } as const;
 
+const topicHrefs: Record<string, string> = {
+  dsa: "/explore/dsa",
+  "system-design": "/explore/system-design",
+  aws: "/explore/aws",
+};
+
 export default function LearningSection() {
   return (
     <section id="explore" className="scroll-mt-24 py-20 sm:py-28">
@@ -22,26 +29,29 @@ export default function LearningSection() {
             Explore
           </h2>
           <p className="max-w-xl text-lg font-light text-muted-foreground">
-            A curated space of engineering fundamentals and beyond — open to
-            explore.
+            Engineering notes written while learning — open a topic to enter a
+            docs-style learning space.
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {learningTopics.map((topic, index) => {
             const Icon = iconMap[topic.icon] ?? iconMap.default;
+            const href = topicHrefs[topic.icon] ?? "/explore";
+            const isAvailable = topic.icon === "system-design";
 
-            return (
+            const content = (
               <motion.article
-                key={topic.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.08, duration: 0.45 }}
-                whileHover={{ y: -4 }}
+                whileHover={isAvailable ? { y: -4 } : undefined}
                 className={cn(
                   "group relative flex h-full flex-col rounded-2xl border border-border bg-card p-6",
-                  "transition-shadow hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5",
+                  isAvailable
+                    ? "transition-shadow hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5"
+                    : "opacity-80",
                 )}
               >
                 <div className="mb-5">
@@ -66,12 +76,38 @@ export default function LearningSection() {
                 </div>
 
                 <div className="mt-5 flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors group-hover:text-accent">
-                  Open
-                  <ArrowUpRight className="h-3.5 w-3.5" />
+                  {isAvailable ? (
+                    <>
+                      Open
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </>
+                  ) : (
+                    "Coming soon"
+                  )}
                 </div>
               </motion.article>
             );
+
+            if (!isAvailable) {
+              return <div key={topic.title}>{content}</div>;
+            }
+
+            return (
+              <Link key={topic.title} href={href} className="block h-full">
+                {content}
+              </Link>
+            );
           })}
+        </div>
+
+        <div className="mt-10 text-center">
+          <Link
+            href="/explore"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+          >
+            View all topics
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
       </div>
     </section>

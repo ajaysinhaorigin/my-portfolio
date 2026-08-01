@@ -103,3 +103,28 @@ body {
   letter-spacing: -0.03em;
   font-weight: 700;
 }
+
+/* Learning platform — rehype-pretty-code dual theme */
+pre code[data-theme],
+code[data-theme] {
+  font-family: var(--font-mono);
+}
+
+pre code[data-theme] span,
+code[data-theme] span {
+  color: var(--shiki-light);
+}
+
+.dark pre code[data-theme] span,
+.dark code[data-theme] span {
+  color: var(--shiki-dark);
+}
+
+pre[data-theme] {
+  background: transparent !important;
+}
+
+.learning-prose :where(img) {
+  border-radius: 0.75rem;
+}
+

@@ -1,0 +1,388 @@
+---
+title: "What Happens When You Type google.com?"
+description: "A simple walkthrough of every step from typing a URL to seeing a webpage — DNS, TCP, TLS, HTTP, and rendering."
+difficulty: "beginner"
+readingTime: "15 mins"
+lastUpdated: "August 2026"
+category: "networking"
+tags: ["dns", "tcp", "tls", "http", "browser"]
+prerequisites: []
+relatedTopics: ["dns", "browser-caching", "tcp-handshake", "tls-handshake", "http"]
+summary: "Typing a URL triggers cache checks, DNS lookup, TCP connection, TLS handshake, an HTTP request/response, and browser rendering. Understanding this path is the foundation of system design."
+interviewQuestions:
+  - "What happens when you type a URL in a browser?"
+  - "Why do we need DNS?"
+  - "Does DNS download webpages?"
+  - "Why is TCP handshake required?"
+  - "What is the difference between HTTP and HTTPS?"
+  - "What is the purpose of the TLS Handshake?"
+  - "Why is browser caching important?"
+  - "How does Google reduce latency?"
+  - "How does Netflix stream videos efficiently?"
+lectureSource:
+  course: "Namaste System Design"
+  instructor: "Akshay Saini"
+  status: "in-progress"
+  revisionCount: 1
+  confidence: 3
+---
+
+## Introduction
+
+When you type a website like `google.com` in your browser and press **Enter**, many systems work together within a few milliseconds to show you the webpage.
+
+Even though it feels like a single action, the browser performs many steps before the page appears on your screen.
+
+Understanding this flow helps you understand how the internet works and builds a strong foundation for system design.
+
+## Learning Objectives
+
+After completing this topic, you should be able to:
+
+- Explain what happens after entering a URL in a browser.
+- Understand why DNS is required.
+- Explain how a request reaches a server.
+- Understand why TCP and TLS are used.
+- Explain how the browser receives the webpage.
+- Understand how companies like Google and Netflix make websites faster.
+
+## High-Level Flow
+
+Here is the full journey at a glance.
+
+```text
+User Types URL
+        │
+        ▼
+Browser Checks Cache
+        │
+        ▼
+DNS Lookup (if needed)
+        │
+        ▼
+IP Address Found
+        │
+        ▼
+TCP Connection
+        │
+        ▼
+TLS Handshake (HTTPS)
+        │
+        ▼
+HTTP Request
+        │
+        ▼
+Server Processes Request
+        │
+        ▼
+HTTP Response
+        │
+        ▼
+Browser Starts Rendering
+```
+
+<Mermaid
+  chart={`
+flowchart TD
+  A[User Types URL] --> B[Browser Checks Cache]
+  B --> C{IP in cache?}
+  C -->|Yes| E[TCP Connection]
+  C -->|No| D[DNS Lookup]
+  D --> E
+  E --> F[TLS Handshake]
+  F --> G[HTTP Request]
+  G --> H[Server Processes Request]
+  H --> I[HTTP Response]
+  I --> J[Browser Starts Rendering]
+`}
+  caption="End-to-end path from typing a URL to rendering a page"
+/>
+
+## Step 1 — User Types a URL
+
+Example:
+
+```text
+https://www.google.com
+```
+
+When you press **Enter**, the browser receives the URL.
+
+At this moment, the browser only knows the website name.
+
+It does **not** know where Google's server is located.
+
+Before it can send any request, it first needs to find the server's IP address.
+
+<Callout type="definition">
+  A **URL (Uniform Resource Locator)** is the address of a resource available on the internet.
+</Callout>
+
+## Step 2 — Browser Checks Cache
+
+Before asking the DNS server, the browser first checks whether it already knows the IP address.
+
+If the IP address is already stored, the browser can skip the DNS lookup and directly contact the server.
+
+This makes websites load much faster.
+
+### Where does the browser look?
+
+The browser checks multiple caches in this order:
+
+```text
+Browser Cache
+      │
+      ▼
+Operating System Cache
+      │
+      ▼
+Router Cache
+      │
+      ▼
+ISP Cache
+      │
+      ▼
+DNS Server
+```
+
+If any layer already knows the IP address, the search stops there.
+
+If none of them have the answer, a DNS lookup is performed.
+
+<Callout type="remember">
+  DNS lookup does **not** happen every time you visit a website. Caching saves both time and network traffic.
+</Callout>
+
+## Step 3 — DNS Lookup
+
+Humans remember names. Computers communicate using IP addresses.
+
+For example, `google.com` is easy for us, while `142.250.xxx.xxx` is easier for computers.
+
+DNS (Domain Name System) converts the domain name into its IP address.
+
+Once the browser receives the IP address, it now knows where the server is located.
+
+<Callout type="definition">
+  DNS stands for **Domain Name System**. Its job is to convert a domain name into an IP address.
+</Callout>
+
+<Callout type="analogy">
+  Imagine you want to send a parcel to your friend. You don't send it using only their name — you need their home address. Similarly, the browser cannot send a request using only `google.com`. It first needs the server's IP address.
+</Callout>
+
+<Callout type="mistake" title="Common Misconception">
+  DNS does **not** download webpages. DNS only returns the IP address. After getting the IP address, the browser sends the actual request to the server.
+</Callout>
+
+## Step 4 — Request Travels Through the Internet
+
+Now that the browser has the IP address, it starts sending the request.
+
+A simplified path looks like this:
+
+```text
+Your Device
+      │
+      ▼
+Wi-Fi Router / Mobile Tower
+      │
+      ▼
+Local ISP
+      │
+      ▼
+Regional ISP
+      │
+      ▼
+Internet Backbone
+      │
+      ▼
+Destination Server
+```
+
+The request travels through multiple networks before reaching the server.
+
+### What is an ISP?
+
+ISP stands for **Internet Service Provider**.
+
+Examples include Jio Fiber, Airtel, BSNL, ACT, and others.
+
+Your ISP connects your device to the internet.
+
+## Step 5 — TCP Three-Way Handshake
+
+Before sending any webpage data, the client and the server first create a reliable connection.
+
+This process is called the **TCP Three-Way Handshake**.
+
+### Why is it needed?
+
+Imagine making a phone call. Before talking, both people first confirm that the call is connected.
+
+TCP works in a similar way. Both the client and the server first make sure they are ready before exchanging data.
+
+### Three-Way Handshake
+
+```text
+Client                    Server
+
+SYN --------------------->
+
+         <--------------- SYN + ACK
+
+ACK --------------------->
+```
+
+- **SYN** — The client says: "I want to start a connection."
+- **SYN + ACK** — The server replies: "I received your request and I'm ready."
+- **ACK** — The client replies: "Great! Let's start communicating."
+
+Now both sides are connected.
+
+<Callout type="remember">
+  TCP handshake happens **after DNS lookup**. Without an IP address, the browser doesn't know which server it should connect to.
+</Callout>
+
+## Step 6 — TLS Handshake (HTTPS)
+
+Today, almost every website uses HTTPS.
+
+HTTPS encrypts communication between the client and the server.
+
+Before sending any sensitive data, both sides first create a secure connection.
+
+This process is called the **TLS Handshake**.
+
+### During the TLS Handshake
+
+- The server sends its SSL/TLS certificate.
+- The browser checks whether the certificate is trusted.
+- Both sides agree on encryption keys.
+- A secure connection is created.
+
+After this, all communication becomes encrypted.
+
+<Callout type="remember">
+  The server's **private key never leaves the server**. Only the certificate and public key are shared.
+</Callout>
+
+## Step 7 — HTTP Request
+
+Once the connection is ready, the browser sends an HTTP request.
+
+Example:
+
+```http
+GET / HTTP/1.1
+Host: www.google.com
+```
+
+This request asks the server for the webpage.
+
+## Step 8 — Server Processes the Request
+
+After receiving the request, the server starts processing it.
+
+Depending on the application, the server may:
+
+- Execute backend code.
+- Fetch data from a database.
+- Read files.
+- Call other services.
+- Generate HTML or JSON.
+
+After processing, it prepares the response.
+
+## Step 9 — HTTP Response
+
+The server sends the response back to the browser.
+
+The response usually contains:
+
+- HTML
+- CSS
+- JavaScript
+- Images
+- Fonts
+- Videos
+- JSON
+
+Large responses are divided into smaller packets before travelling through the internet.
+
+<Callout type="remember">
+  Different packets may travel through different network routes. TCP ensures they are reassembled in the correct order before the browser processes them.
+</Callout>
+
+## Step 10 — Browser Starts Rendering
+
+After receiving the response, the browser begins rendering the webpage.
+
+Rendering means converting HTML, CSS, and JavaScript into the webpage that you see on the screen.
+
+The rendering process itself contains several steps and is covered separately in a future **Browser Rendering Pipeline** topic.
+
+## How Google Makes Websites Faster
+
+Normally, a request travels through multiple ISP networks before reaching the server.
+
+Google reduces this distance by using **Network Peering**.
+
+Google places its servers close to many ISPs around the world.
+
+Instead of travelling across many networks, the ISP can often communicate directly with Google's nearby servers.
+
+This reduces latency and makes websites load faster.
+
+## How Netflix Streams Videos Faster
+
+Netflix uses a different approach.
+
+Instead of always sending videos from a distant data center, Netflix installs caching servers inside or very close to ISP networks.
+
+Popular movies and TV shows are already stored on these local servers.
+
+When you press Play, the video is often delivered from a nearby cache.
+
+This reduces internet traffic and improves streaming speed.
+
+## Domain Structure
+
+Example:
+
+```text
+https://www.google.com
+```
+
+| Part | Meaning |
+|------|---------|
+| https | Protocol |
+| www | Subdomain |
+| google | Domain Name |
+| .com | Top-Level Domain (TLD) |
+
+## Key Takeaways
+
+- The browser first checks cache before performing a DNS lookup.
+- DNS converts domain names into IP addresses.
+- DNS only returns the IP address. It does not fetch webpages.
+- TCP creates a reliable connection between the client and the server.
+- TLS secures the communication using encryption.
+- HTTP is used to request and receive webpage data.
+- The server processes the request and sends the response.
+- The browser starts rendering after receiving the response.
+- Google uses network peering to reduce latency.
+- Netflix stores popular content close to users using ISP caching.
+
+## Revision (30 Seconds)
+
+1. User enters a URL.
+2. Browser checks cache.
+3. DNS finds the IP address.
+4. Browser creates a TCP connection.
+5. TLS creates a secure connection.
+6. Browser sends an HTTP request.
+7. Server processes the request.
+8. Server sends the response.
+9. Browser starts rendering the webpage.

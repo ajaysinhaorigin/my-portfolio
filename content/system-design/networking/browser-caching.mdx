@@ -1,0 +1,142 @@
+---
+title: "Browser Caching"
+description: "How browsers, OS, routers, and ISPs cache DNS and content so websites load faster on repeat visits."
+difficulty: "beginner"
+readingTime: "8 mins"
+lastUpdated: "August 2026"
+category: "networking"
+tags: ["cache", "dns", "browser", "ttl"]
+prerequisites: ["how-web-works"]
+relatedTopics: ["how-web-works", "dns", "http"]
+summary: "Before asking the network, the browser checks several caches. Hits skip expensive lookups and make sites feel instant."
+interviewQuestions:
+  - "Why is browser caching important?"
+  - "In what order does the browser check DNS caches?"
+  - "What happens when a DNS cache entry expires?"
+  - "Does caching mean DNS never runs again?"
+lectureSource:
+  course: "Namaste System Design"
+  instructor: "Akshay Saini"
+  status: "in-progress"
+  revisionCount: 1
+  confidence: 3
+---
+
+## Introduction
+
+Before asking the DNS server, the browser first checks whether it already knows the IP address.
+
+If the IP address is already stored, the browser can skip the DNS lookup and directly contact the server.
+
+This makes websites load much faster.
+
+<Callout type="definition">
+  A **cache** is temporary storage for data that was expensive to fetch, so the next request can reuse it quickly.
+</Callout>
+
+## Why Caching Matters
+
+Without caching, every visit would repeat the full DNS journey and often refetch the same assets.
+
+Caching saves:
+
+- Time (lower latency)
+- Network traffic
+- Load on DNS servers and origin servers
+
+<Callout type="remember">
+  DNS lookup does **not** happen every time you visit a website. Caching saves both time and network traffic.
+</Callout>
+
+## Where Does the Browser Look?
+
+The browser checks multiple caches in this order:
+
+```text
+Browser Cache
+      │
+      ▼
+Operating System Cache
+      │
+      ▼
+Router Cache
+      │
+      ▼
+ISP Cache
+      │
+      ▼
+DNS Server
+```
+
+If any layer already knows the IP address, the search stops there.
+
+If none of them have the answer, a DNS lookup is performed.
+
+<Mermaid
+  chart={`
+flowchart TD
+  A[Need IP for google.com] --> B[Browser Cache]
+  B -->|miss| C[OS Cache]
+  C -->|miss| D[Router Cache]
+  D -->|miss| E[ISP Cache]
+  E -->|miss| F[DNS Server]
+  B -->|hit| G[Use IP]
+  C -->|hit| G
+  D -->|hit| G
+  E -->|hit| G
+  F --> G
+`}
+  caption="Cache layers checked before a full DNS lookup"
+/>
+
+## Cache Hit vs Cache Miss
+
+| Result | Meaning | What happens next |
+|--------|---------|-------------------|
+| Hit | IP (or content) found in cache | Skip deeper lookups |
+| Miss | Not found | Ask the next layer |
+
+A **hit** is the happy path for performance.
+
+A **miss** is normal for first visits, after expiry, or after cache clears.
+
+## TTL — How Long Data Stays Cached
+
+Cached answers are not forever.
+
+DNS records usually include a **TTL** (Time To Live).
+
+When the TTL expires, the cache entry is considered stale and must be refreshed.
+
+<Callout type="important">
+  Short TTL means fresher data but more DNS lookups. Long TTL means fewer lookups but slower updates when an IP changes.
+</Callout>
+
+## Browser Content Cache (Bonus)
+
+Besides DNS, browsers also cache page assets:
+
+- CSS files
+- JavaScript bundles
+- Images
+- Fonts
+
+HTTP headers like `Cache-Control` tell the browser how long it may reuse those files.
+
+This topic focuses on the **DNS cache path** from the "type google.com" story. Content caching is covered more deeply with HTTP.
+
+## Key Takeaways
+
+- The browser checks cache before performing a DNS lookup.
+- Multiple layers exist: browser, OS, router, ISP, then DNS.
+- A cache hit can skip the entire DNS hierarchy.
+- TTL controls how long a cached answer stays valid.
+- Caching is a major reason repeat visits feel faster.
+
+## Revision (30 Seconds)
+
+1. Need an IP for a domain.
+2. Check browser → OS → router → ISP caches.
+3. Stop at the first hit.
+4. On full miss, ask DNS.
+5. Store the answer with a TTL for next time.

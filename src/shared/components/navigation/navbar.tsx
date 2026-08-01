@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cn } from "@/shared/utils";
 import ThemeToggle from "./theme-toggle";
@@ -11,12 +12,13 @@ const pillLinks = [
   { label: "Skills", href: "#skills" },
   { label: "Projects", href: "#projects" },
   { label: "Experience", href: "#experience" },
-  { label: "Explore", href: "#explore" },
+  { label: "Explore", href: "/explore" },
 ] as const;
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("#home");
+
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -72,22 +74,30 @@ export default function Navbar() {
         >
           <div className="hidden items-center gap-1 sm:flex">
             {pillLinks.map((link) => {
-              const isActive =
-                link.href === "#home"
+              const isRoute = link.href.startsWith("/");
+              const isActive = isRoute
+                ? false
+                : link.href === "#home"
                   ? active === "#home"
                   : active === link.href;
 
+              const className = cn(
+                "rounded-full px-5 py-2 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-foreground/10 text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              );
+
+              if (isRoute) {
+                return (
+                  <Link key={link.href} href={link.href} className={className}>
+                    {link.label}
+                  </Link>
+                );
+              }
+
               return (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "rounded-full px-5 py-2 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-foreground/10 text-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
+                <a key={link.href} href={link.href} className={className}>
                   {link.label}
                 </a>
               );

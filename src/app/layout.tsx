@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Outfit } from "next/font/google";
-import { Navbar } from "@/shared/components";
+import ConditionalNavbar from "@/shared/components/navigation/conditional-navbar";
 import { ThemeProvider } from "@/shared/providers";
 import { siteConfig } from "@/features/portfolio/portfolio.data";
 import "./globals.css";
@@ -64,7 +64,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
+          <ConditionalNavbar />
           <main className="flex-1">{children}</main>
         </ThemeProvider>
       </body>

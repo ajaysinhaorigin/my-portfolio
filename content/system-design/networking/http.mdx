@@ -1,0 +1,155 @@
+---
+title: "HTTP Request and Response"
+description: "How browsers ask for pages and how servers reply — methods, status codes, headers, and what travels in the body."
+difficulty: "beginner"
+readingTime: "10 mins"
+lastUpdated: "August 2026"
+category: "networking"
+tags: ["http", "rest", "networking"]
+prerequisites: ["how-web-works", "tcp-handshake"]
+relatedTopics: ["how-web-works", "tls-handshake", "browser-caching", "dns"]
+summary: "HTTP is the language of the web. After TCP (and usually TLS) are ready, the browser sends a request and the server returns a response with HTML, JSON, or other assets."
+interviewQuestions:
+  - "What is the difference between HTTP and HTTPS?"
+  - "What does a typical GET request look like?"
+  - "What do status codes 200, 404, and 500 mean?"
+  - "What happens after the server sends an HTTP response?"
+  - "Difference between PUT and PATCH?"
+lectureSource:
+  course: "Namaste System Design"
+  instructor: "Akshay Saini"
+  status: "in-progress"
+  revisionCount: 1
+  confidence: 3
+---
+
+## Introduction
+
+Once the connection is ready (TCP, and usually TLS for HTTPS), the browser sends an **HTTP request**.
+
+HTTP is how browsers, mobile apps, and backend services ask for and receive data.
+
+<Callout type="definition">
+  **HTTP (HyperText Transfer Protocol)** is an application-layer protocol built on a request/response model.
+</Callout>
+
+## HTTP Request
+
+Example:
+
+```http
+GET / HTTP/1.1
+Host: www.google.com
+```
+
+This request asks the server for the webpage at the root path `/`.
+
+A request usually has:
+
+| Part | Role |
+|------|------|
+| Method | What you want to do (`GET`, `POST`, …) |
+| Path | Which resource (`/`, `/search`, `/api/users`) |
+| Headers | Extra metadata (`Host`, `Accept`, `Authorization`) |
+| Body | Optional data (common with `POST` / `PUT`) |
+
+## Common Methods
+
+| Method | Intent | Typical use |
+|--------|--------|-------------|
+| GET | Read | Open a page, fetch data |
+| POST | Create / action | Submit a form, create a record |
+| PUT | Replace | Update a full resource |
+| PATCH | Partial update | Change one field |
+| DELETE | Remove | Delete a resource |
+
+<Callout type="example">
+  Typing `google.com` usually triggers a `GET` request for the homepage HTML.
+</Callout>
+
+## Server Processes the Request
+
+After receiving the request, the server starts processing it.
+
+Depending on the application, the server may:
+
+- Execute backend code.
+- Fetch data from a database.
+- Read files.
+- Call other services.
+- Generate HTML or JSON.
+
+After processing, it prepares the response.
+
+## HTTP Response
+
+The server sends the response back to the browser.
+
+The response usually contains:
+
+- HTML
+- CSS
+- JavaScript
+- Images
+- Fonts
+- Videos
+- JSON
+
+It also includes a **status code** and **headers**.
+
+### Status codes you should know
+
+| Code | Meaning |
+|------|---------|
+| 200 | OK — success |
+| 301 / 302 | Redirect |
+| 400 | Bad request |
+| 401 | Unauthorized |
+| 403 | Forbidden |
+| 404 | Not found |
+| 500 | Server error |
+
+Large responses are divided into smaller packets before travelling through the internet.
+
+<Callout type="remember">
+  Different packets may travel through different network routes. TCP ensures they are reassembled in the correct order before the browser processes them.
+</Callout>
+
+## Useful Headers
+
+| Header | Why it matters |
+|--------|----------------|
+| `Host` | Which site on a shared server |
+| `Content-Type` | Format of the body (`text/html`, `application/json`) |
+| `Cache-Control` | How clients may cache the response |
+| `Authorization` | Credentials for protected APIs |
+
+## What Happens Next?
+
+After receiving the response, the browser begins **rendering**.
+
+Rendering means converting HTML, CSS, and JavaScript into the webpage you see on the screen.
+
+That pipeline is a separate topic. For networking, remember: HTTP is the step that actually moves page data after the connection is secure.
+
+## HTTP vs HTTPS (Quick Reminder)
+
+HTTPS is still HTTP — plus TLS encryption on top.
+
+Same request/response model. Safer transport.
+
+## Key Takeaways
+
+- HTTP is used to request and receive webpage data.
+- A request has a method, path, headers, and optional body.
+- The server processes the request and builds a response.
+- Responses carry status codes, headers, and a body (HTML, JSON, assets).
+- After the response arrives, the browser starts rendering.
+
+## Revision (30 Seconds)
+
+1. TCP (and TLS) connection is ready.
+2. Browser sends an HTTP request (`GET /` …).
+3. Server processes the request.
+4. Server sends an HTTP response.
+5. Browser receives the body and starts rendering.

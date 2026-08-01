@@ -1,0 +1,171 @@
+---
+title: "DNS Explained"
+description: "How domain names become IP addresses — caches, resolvers, and why DNS never downloads webpages."
+difficulty: "beginner"
+readingTime: "10 mins"
+lastUpdated: "August 2026"
+category: "networking"
+tags: ["dns", "networking", "ip"]
+prerequisites: ["how-web-works"]
+relatedTopics: ["how-web-works", "browser-caching", "tcp-handshake"]
+summary: "DNS is the internet's phonebook. It converts human-friendly domain names into IP addresses so browsers know which server to contact."
+interviewQuestions:
+  - "Why do we need DNS?"
+  - "Does DNS download webpages?"
+  - "Explain the DNS resolution process."
+  - "What is the difference between recursive and iterative DNS queries?"
+  - "What is a DNS A record vs a CNAME?"
+lectureSource:
+  course: "Namaste System Design"
+  instructor: "Akshay Saini"
+  status: "in-progress"
+  revisionCount: 1
+  confidence: 3
+---
+
+## Introduction
+
+Humans remember names. Computers communicate using IP addresses.
+
+For example, `google.com` is easy for us, while `142.250.xxx.xxx` is easier for computers.
+
+DNS (Domain Name System) converts the domain name into its IP address.
+
+Once the browser receives the IP address, it knows where the server is located.
+
+<Callout type="definition">
+  DNS stands for **Domain Name System**. Its job is to convert a domain name into an IP address.
+</Callout>
+
+## Why Do We Need DNS?
+
+Without DNS, you would have to remember IP addresses for every website.
+
+That is nearly impossible for humans, and websites change IPs over time.
+
+DNS gives us a stable name (`google.com`) while the IP behind it can change.
+
+## Analogy
+
+<Callout type="analogy">
+  Imagine you want to send a parcel to your friend. You don't send it using only their name — you need their home address. Similarly, the browser cannot send a request using only `google.com`. It first needs the server's IP address. The IP address is like the internet's home address.
+</Callout>
+
+## Common Misconception
+
+<Callout type="mistake" title="Common Misconception">
+  DNS does **not** download webpages. DNS only returns the IP address. After getting the IP address, the browser sends the actual request to the server.
+</Callout>
+
+## How DNS Resolution Works
+
+When the browser needs an IP address and the caches are empty, a DNS lookup begins.
+
+```text
+Browser
+   │
+   ▼
+Recursive Resolver (usually your ISP)
+   │
+   ▼
+Root Nameserver
+   │
+   ▼
+TLD Nameserver (.com, .org, .in)
+   │
+   ▼
+Authoritative Nameserver
+   │
+   ▼
+IP Address returned
+```
+
+<Mermaid
+  chart={`
+flowchart LR
+  Browser --> Resolver
+  Resolver --> Root
+  Root --> TLD
+  TLD --> Auth[Authoritative]
+  Auth --> Resolver
+  Resolver --> Browser
+`}
+  caption="DNS walks from root to the authoritative nameserver"
+/>
+
+### What each server does
+
+| Server | Role |
+|--------|------|
+| Recursive Resolver | Asks questions on your behalf and caches answers |
+| Root | Points to the correct TLD server (`.com`, `.org`) |
+| TLD | Points to the domain's authoritative server |
+| Authoritative | Returns the final IP address for the domain |
+
+## Where Caching Fits In
+
+Before talking to DNS servers, the browser checks local caches:
+
+```text
+Browser Cache
+      │
+      ▼
+Operating System Cache
+      │
+      ▼
+Router Cache
+      │
+      ▼
+ISP Cache
+      │
+      ▼
+DNS Server
+```
+
+If any layer already knows the IP, the search stops there.
+
+This is why DNS lookup does **not** happen every time you visit a website.
+
+<Callout type="remember">
+  Caching saves both time and network traffic. A cached DNS answer can skip the entire hierarchy.
+</Callout>
+
+## Common DNS Record Types
+
+| Type | Purpose |
+|------|---------|
+| A | Hostname → IPv4 address |
+| AAAA | Hostname → IPv6 address |
+| CNAME | Alias → another hostname |
+| MX | Mail servers for the domain |
+| TXT | Text / verification / SPF data |
+| NS | Nameserver that is authoritative for the domain |
+
+## Domain Structure Reminder
+
+```text
+https://www.google.com
+```
+
+| Part | Meaning |
+|------|---------|
+| https | Protocol |
+| www | Subdomain |
+| google | Domain Name |
+| .com | Top-Level Domain (TLD) |
+
+## Key Takeaways
+
+- DNS converts domain names into IP addresses.
+- DNS only returns the IP address. It does not fetch webpages.
+- Resolution walks Root → TLD → Authoritative nameserver.
+- Caches at many layers make repeat visits much faster.
+- A and AAAA records map names to IPs. CNAME creates aliases.
+
+## Revision (30 Seconds)
+
+1. Browser needs an IP for a domain name.
+2. Local caches are checked first.
+3. If miss, resolver asks Root → TLD → Authoritative.
+4. IP is returned and usually cached.
+5. Browser uses the IP for the next steps (TCP, TLS, HTTP).
