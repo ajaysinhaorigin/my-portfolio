@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cn } from "@/shared/utils";
 import ThemeToggle from "./theme-toggle";
@@ -12,13 +11,12 @@ const pillLinks = [
   { label: "Skills", href: "#skills" },
   { label: "Projects", href: "#projects" },
   { label: "Experience", href: "#experience" },
-  { label: "Explore", href: "/explore" },
+  { label: "Explore", href: "#explore" },
 ] as const;
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("#home");
-
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -36,6 +34,7 @@ export default function Navbar() {
       "explore",
       "contact",
     ];
+    // Scroll position is the source of truth for active state.
     // Threshold must exceed scroll-mt-24 (96px) so a section is detected
     // right after an anchor jump, even if the layout shifts slightly.
     const onScroll = () => {
@@ -47,19 +46,12 @@ export default function Navbar() {
           return;
         }
       }
-    };
-    const onHashChange = () => {
-      if (sectionIds.includes(window.location.hash.slice(1))) {
-        setActive(window.location.hash);
-      }
+      setActive("#home");
     };
     onScroll();
-    onHashChange();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("hashchange", onHashChange);
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("hashchange", onHashChange);
     };
   }, []);
 
@@ -74,30 +66,22 @@ export default function Navbar() {
         >
           <div className="hidden items-center gap-1 sm:flex">
             {pillLinks.map((link) => {
-              const isRoute = link.href.startsWith("/");
-              const isActive = isRoute
-                ? false
-                : link.href === "#home"
+              const isActive =
+                link.href === "#home"
                   ? active === "#home"
                   : active === link.href;
 
-              const className = cn(
-                "rounded-full px-5 py-2 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-foreground/10 text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              );
-
-              if (isRoute) {
-                return (
-                  <Link key={link.href} href={link.href} className={className}>
-                    {link.label}
-                  </Link>
-                );
-              }
-
               return (
-                <a key={link.href} href={link.href} className={className}>
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "rounded-full px-5 py-2 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-foreground/10 text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
                   {link.label}
                 </a>
               );
@@ -112,8 +96,8 @@ export default function Navbar() {
               className={cn(
                 "ml-1 whitespace-nowrap rounded-full px-5 py-2 text-sm font-bold transition-all",
                 active === "#contact"
-                  ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]"
-                  : "bg-accent text-white shadow-[0_0_15px_rgba(255,107,53,0.3)] hover:bg-orange-mid hover:shadow-[0_0_25px_rgba(255,107,53,0.5)]",
+                  ? "bg-accent text-white shadow-[0_0_15px_rgba(255,107,53,0.3)] hover:bg-orange-mid"
+                  : "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-zinc-100",
               )}
             >
               Let&apos;s Talk

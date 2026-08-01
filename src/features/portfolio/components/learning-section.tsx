@@ -29,7 +29,7 @@ export default function LearningSection() {
             Explore
           </h2>
           <p className="max-w-xl text-lg font-light text-muted-foreground">
-            Engineering notes written while learning — open a topic to enter a
+            Engineering notes written while learning — open a track to enter a
             docs-style learning space.
           </p>
         </div>
@@ -105,7 +105,7 @@ export default function LearningSection() {
             href="/explore"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
           >
-            View all topics
+            Browse all tracks
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>
