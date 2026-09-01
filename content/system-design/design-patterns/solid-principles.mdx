@@ -92,7 +92,7 @@ Changing one part risks breaking the others, and unit testing any single respons
 
 ### The Solution
 
-Split into focused classes — each with exactly one reason to change.
+Split into focused classes — each with exactly one reason to change. Then **create those classes and pass them into `UserService`** when you want to register a user.
 
 ```js
 // Responsibility 1: Database only
@@ -127,7 +127,7 @@ class WelcomeEmailSender {
   }
 }
 
-// Orchestrator: composes the focused classes
+// Orchestrator: only knows the register steps — not how DB/email work
 class UserService {
   constructor(repository, validator, emailSender) {
     this.repository = repository;
@@ -141,16 +141,145 @@ class UserService {
     this.emailSender.send(user);
   }
 }
+
+// ---- How you actually use it ----
+
+const db = new DatabaseClient(process.env.DATABASE_URL);
+
+// 1. Build the helpers
+const repository = new UserRepository(db);
+const validator = new UserValidator();
+const emailSender = new WelcomeEmailSender();
+
+// 2. Hand them to UserService (this is called dependency injection)
+const userService = new UserService(repository, validator, emailSender);
+
+// 3. Call register — UserService uses the helpers you gave it
+userService.register({
+  name: "Ada",
+  email: "ada@example.com",
+  password: "securePass1",
+});
 ```
 
-Now each class has exactly one reason to change. Testing `UserValidator` requires zero database or email setup.
+Think of `UserService` like a chef. You give the chef the tools (`repository`, `validator`, `emailSender`), then ask: "register this user." The chef does not create those tools itself — it only runs the steps in order.
 
-<Callout type="tip">
-  A practical test: read your class name aloud, then list everything it does. If the list has more than one item, it probably violates SRP.
-</Callout>
+In an Express route it looks the same — build once, then call:
+
+```js
+const userService = new UserService(
+  new UserRepository(db),
+  new UserValidator(),
+  new WelcomeEmailSender(),
+);
+
+app.post("/users/register", (req, res) => {
+  try {
+    userService.register(req.body);
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+```
+
+### Many methods, one responsibility
 
 <Callout type="remember">
   "One reason to change" does not mean "one method." A class can have many methods as long as they all serve the same responsibility.
+</Callout>
+
+`UserRepository` already has `save` and `findById`. Both are still one responsibility: **persist users**. Adding more storage methods does not violate SRP:
+
+```js
+class UserRepository {
+  constructor(db) {
+    this.db = db;
+  }
+
+  save(user) { /* insert */ }
+  findById(id) { /* select by id */ }
+  findByEmail(email) { /* select by email */ }
+  update(id, patch) { /* update fields */ }
+  delete(id) { /* delete row */ }
+  listActive() { /* select where active = true */ }
+}
+```
+
+All of these change for the same reason: the way users are stored or queried.
+
+Same idea for validation — many rules, still one job:
+
+```js
+class UserValidator {
+  validate(user) {
+    this.validateEmail(user.email);
+    this.validatePassword(user.password);
+    this.validateName(user.name);
+  }
+
+  validateEmail(email) {
+    if (!email.includes("@")) throw new Error("Invalid email");
+  }
+
+  validatePassword(password) {
+    if (password.length < 8) throw new Error("Password too short");
+  }
+
+  validateName(name) {
+    if (!name || name.trim().length < 2) throw new Error("Name too short");
+  }
+}
+```
+
+And a price calculator can expose many operations while owning only **pricing**:
+
+```js
+class PriceCalculator {
+  subtotal(items) {
+    return items.reduce((sum, item) => sum + item.price * item.qty, 0);
+  }
+
+  tax(subtotal, rate) {
+    return subtotal * rate;
+  }
+
+  discount(subtotal, percent) {
+    return subtotal * (percent / 100);
+  }
+
+  total(items, { taxRate, discountPercent }) {
+    const sub = this.subtotal(items);
+    const afterDiscount = sub - this.discount(sub, discountPercent);
+    return afterDiscount + this.tax(afterDiscount, taxRate);
+  }
+}
+```
+
+What *would* violate SRP is mixing responsibilities into the same class:
+
+```js
+// ❌ Many methods, but MANY reasons to change
+class UserGodObject {
+  save(user) { /* DB */ }
+  findById(id) { /* DB */ }
+  validate(user) { /* validation */ }
+  sendWelcomeEmail(user) { /* email */ }
+  calculateInvoiceTotal(items) { /* pricing */ }
+}
+```
+
+Quick check:
+
+| Class | Many methods OK? | Why |
+| --- | --- | --- |
+| `UserRepository` | Yes | All methods are about user persistence |
+| `UserValidator` | Yes | All methods are about user validation rules |
+| `PriceCalculator` | Yes | All methods are about computing money |
+| `UserGodObject` | No | Persistence + validation + email + pricing |
+
+<Callout type="tip">
+  A practical test: read your class name aloud, then list everything it does. If the list has more than one item, it probably violates SRP.
 </Callout>
 
 ---
