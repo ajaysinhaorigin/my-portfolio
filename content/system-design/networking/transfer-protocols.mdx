@@ -1,0 +1,209 @@
+---
+title: "Transfer Protocols — SMTP and FTP"
+description: "SMTP and FTP explained simply — how email is sent and how files are uploaded or downloaded."
+difficulty: "beginner"
+readingTime: "6 mins"
+lastUpdated: "August 2026"
+category: "networking"
+tags: ["smtp", "ftp", "email", "files"]
+prerequisites: ["communication-protocols"]
+relatedTopics: ["communication-protocols", "realtime-protocols", "web-protocols"]
+summary: "SMTP is mainly for sending email. FTP is for uploading and downloading files using a control channel and a data channel."
+interviewQuestions:
+  - "What does SMTP stand for?"
+  - "Is SMTP used for sending or receiving?"
+  - "What protocols are used for receiving email?"
+  - "Explain the high-level email sending path."
+  - "What is FTP?"
+  - "What are the control channel and data channel?"
+  - "What is the difference between active and passive mode?"
+  - "Why do people often prefer secure alternatives to classic FTP today?"
+lectureSource:
+  course: "Namaste Frontend System Design"
+  instructor: "Akshay Saini"
+  status: "in-progress"
+  revisionCount: 1
+  confidence: 3
+---
+
+## Introduction
+
+This chapter covers protocols used to move messages and files.
+
+You will learn:
+
+- Simple Mail Transfer Protocol (SMTP)
+- File Transfer Protocol (FTP)
+
+<Callout type="note">
+  For the full protocol map and decision guide, open the **Communication Protocols** overview.
+</Callout>
+
+---
+
+## SMTP — Simple Mail Transfer Protocol
+
+SMTP is the protocol mainly responsible for **sending** email.
+
+<Callout type="definition">
+  **Simple Mail Transfer Protocol (SMTP)** is an application-layer protocol used to transfer email messages between mail servers and from email clients to servers.
+</Callout>
+
+### Why do we need SMTP?
+
+Different email providers need a shared way to pass messages across the internet.
+
+Without a common protocol, Gmail, Outlook, and other systems could not reliably exchange mail.
+
+### How email sending works
+
+A simplified story:
+
+1. You write an email and press Send
+2. Your email client contacts an SMTP server
+3. The SMTP server forwards the message toward the receiver's mail system
+4. The receiver later fetches the message using a receiving protocol
+
+```text
+Sender Device
+      │
+      ▼
+SMTP Server
+      │
+      ▼
+Receiver Mail Server
+      │
+      ▼
+Receiver Device
+```
+
+### Important clarification
+
+SMTP is mainly for sending.
+
+Receiving email is usually handled by:
+
+- Post Office Protocol version 3 (POP3)
+- Internet Message Access Protocol (IMAP)
+
+Brief intro only:
+
+- **POP3** often downloads mail to one device
+- **IMAP** keeps mail synced across multiple devices
+
+### SMTP advantages and disadvantages
+
+**Advantages**
+
+- Standard way to send email across the internet
+- Works between different email providers
+- Mature and widely supported
+
+**Disadvantages**
+
+- Sending alone is not the full email story
+- Needs other systems for receiving, spam filtering, and storage
+
+### SMTP real-world example
+
+When you send mail from Gmail to Outlook, SMTP is part of the path that carries the message between mail servers.
+
+<Callout type="tip">
+  Interview angle: SMTP sends mail. POP3 and IMAP are used to receive or sync mail.
+</Callout>
+
+<Callout type="remember">
+  SMTP moves email from senders toward mail servers. Receiving later usually depends on POP3 or IMAP.
+</Callout>
+
+---
+
+## FTP — File Transfer Protocol
+
+FTP was built for uploading and downloading files between a computer and a remote server.
+
+<Callout type="definition">
+  **File Transfer Protocol (FTP)** is a protocol used to transfer files between a client and a server.
+</Callout>
+
+### Why do we need FTP?
+
+Teams often need a structured way to:
+
+- upload website files
+- download large packages
+- move datasets between systems
+
+FTP was created for that kind of file movement.
+
+### How FTP works
+
+FTP often uses two channels:
+
+- **Control Channel** — for commands such as login, list files, upload, download
+- **Data Channel** — for the actual file bytes
+
+```text
+Client                         Server
+  │                              │
+  │◄──── Control Channel ───────►│
+  │◄──── Data Channel ──────────►│
+```
+
+Many FTP servers ask for a username and password before allowing transfers.
+
+### Active Mode and Passive Mode
+
+These modes change who opens the data channel.
+
+- **Active Mode** — server may try to connect back to the client for data
+- **Passive Mode** — client usually opens both channels, which works better behind many firewalls
+
+For beginners, remember this:
+
+Passive Mode is often preferred in modern networks because firewalls and routers frequently block unexpected incoming connections.
+
+### FTP advantages and disadvantages
+
+**Advantages**
+
+- Designed for file transfer
+- Clear separation of commands and data
+- Useful for website deployment and large files
+
+**Disadvantages**
+
+- Classic FTP is not encrypted by default
+- Secure variants such as FTPS or alternatives like SFTP are often preferred today
+- Can be awkward with firewalls if misconfigured
+
+### FTP real-world examples
+
+- Uploading website files to a hosting server
+- Moving large datasets between systems
+- Bulk download of file packages
+
+<Callout type="tip">
+  Interview angle: FTP uses a control channel for commands and a data channel for the actual file bytes.
+</Callout>
+
+<Callout type="remember">
+  FTP is made for uploading and downloading files. For secure transfers today, teams often prefer safer alternatives.
+</Callout>
+
+## Key Takeaways
+
+- SMTP is mainly for sending email.
+- POP3 and IMAP help receive or sync email.
+- FTP uploads and downloads files.
+- FTP uses a control channel and a data channel.
+- Passive Mode often works better behind modern firewalls.
+- Classic FTP is not encrypted by default.
+
+## Revision (30 Seconds)
+
+1. SMTP sends email.
+2. POP3 / IMAP receive or sync email.
+3. FTP moves files.
+4. Control channel = commands. Data channel = file bytes.
+5. Prefer secure alternatives for production transfers.

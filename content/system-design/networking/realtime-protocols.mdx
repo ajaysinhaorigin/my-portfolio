@@ -1,0 +1,369 @@
+---
+title: "Real-Time Protocols — WebSocket, TCP, and UDP"
+description: "WebSocket, TCP, and UDP explained simply — live communication, reliability, and speed trade-offs."
+difficulty: "beginner"
+readingTime: "13 mins"
+lastUpdated: "August 2026"
+category: "networking"
+tags: ["websocket", "tcp", "udp", "realtime"]
+prerequisites: ["communication-protocols", "web-protocols"]
+relatedTopics: ["communication-protocols", "web-protocols", "transfer-protocols"]
+summary: "WebSocket enables live two-way apps. TCP uses a three-way handshake and prioritizes reliable ordered delivery. UDP prioritizes speed when a little data loss is acceptable."
+interviewQuestions:
+  - "What problem does WebSocket solve?"
+  - "What is HTTP Upgrade?"
+  - "What does full duplex mean?"
+  - "Why is TCP handshake required?"
+  - "Explain SYN, SYN-ACK, and ACK."
+  - "Why is TCP called reliable?"
+  - "Why can TCP be slower than UDP?"
+  - "What is UDP?"
+  - "When would you choose UDP over TCP?"
+  - "Why is losing one packet acceptable in a video call?"
+lectureSource:
+  course: "Namaste Frontend System Design"
+  instructor: "Akshay Saini"
+  status: "in-progress"
+  revisionCount: 2
+  confidence: 3
+---
+
+## Introduction
+
+This chapter covers protocols used when timing and live data matter.
+
+You will learn:
+
+- WebSocket Protocol
+- Transmission Control Protocol (TCP) and the three-way handshake
+- User Datagram Protocol (UDP)
+
+<Callout type="note">
+  For the protocol map, start with the **Protocols Overview** chapter.
+</Callout>
+
+---
+
+## WebSocket Protocol
+
+WebSocket is for live communication.
+
+Chat apps, stock tickers, multiplayer games, and collaborative editors often need it.
+
+<Callout type="definition">
+  **WebSocket Protocol** starts with HTTP and then upgrades into a persistent full-duplex connection.
+</Callout>
+
+### What problem does WebSocket solve?
+
+HTTP is great for request and response.
+
+But what if both sides need to talk continuously?
+
+If you force that with plain HTTP, the browser may keep asking:
+
+> "Any new messages?"
+> "Any new messages?"
+> "Any new messages?"
+
+That pattern is inefficient.
+
+WebSocket opens a long-lived two-way connection instead.
+
+### How WebSocket works
+
+1. Browser starts with a normal HTTP request
+2. The request asks to upgrade to WebSocket
+3. If the server agrees, the protocol switches
+4. A persistent connection stays open
+5. Both sides can send messages anytime
+
+```text
+Client                              Server
+   │                                   │
+   │──── HTTP Upgrade Request ────────►│
+   │◄─── Switching Protocols ──────────│
+   │                                   │
+   │◄──── Full Duplex messages ───────►│
+```
+
+<Mermaid
+  chart={`
+sequenceDiagram
+  participant Client
+  participant Server
+  Client->>Server: HTTP Upgrade
+  Server->>Client: Switching Protocols
+  Note over Client,Server: Persistent full-duplex connection
+  Client->>Server: Chat message
+  Server->>Client: Chat reply
+`}
+  caption="WebSocket begins with HTTP Upgrade, then becomes full duplex"
+/>
+
+### What is Full Duplex?
+
+**Full Duplex** means both sides can speak at the same time.
+
+Phone call analogy:
+
+- Half duplex is like a walkie-talkie: one person talks, then the other
+- Full duplex is like a normal phone call: both can talk and listen together
+
+### WebSocket real-world examples
+
+- Live chat apps
+- Stock market price updates
+- Multiplayer games
+- Collaborative editors
+- Real-time notifications
+
+### WebSocket advantages and disadvantages
+
+**Advantages**
+
+- Low latency messaging
+- Efficient for live updates
+- Server can push data without waiting for another client poll
+
+**Disadvantages**
+
+- More complex than simple HTTP request/response
+- Needs reconnect logic and careful scaling
+- Not always necessary for simple websites
+
+<Callout type="tip">
+  Interview angle: WebSocket solves inefficient polling by keeping one persistent full-duplex connection.
+</Callout>
+
+<Callout type="remember">
+  Use WebSocket when both sides need to talk often and quickly. Use plain HTTPS when a normal request/response is enough.
+</Callout>
+
+---
+
+## TCP — Transmission Control Protocol
+
+TCP is a transport protocol built for reliable delivery.
+
+If you are loading a webpage, missing pieces of HTML are not acceptable.
+
+TCP helps recover from loss, delay, and out-of-order packets.
+
+<Callout type="definition">
+  **Transmission Control Protocol (TCP)** is a connection-oriented transport protocol that creates a reliable channel between two machines.
+</Callout>
+
+### Why do we need TCP?
+
+The internet can lose packets.
+
+It can also delay packets or deliver them out of order.
+
+TCP numbers data, acknowledges received bytes, rearranges packets, and retransmits lost ones.
+
+It also uses flow control and congestion control so senders do not overwhelm receivers or the network.
+
+### Three-Way Handshake
+
+Before sending useful data, the client and the server first create a reliable connection.
+
+This process is called the **TCP Three-Way Handshake**.
+
+Imagine making a phone call.
+
+Before talking, both people first confirm that the call is connected.
+
+TCP works in a similar way.
+
+Order of events:
+
+1. Browser has a URL
+2. DNS (or cache) provides an IP address
+3. **TCP handshake starts** using that IP and a port (usually `443` for HTTPS)
+4. TLS and HTTP happen after the TCP connection exists
+
+```text
+Client                    Server
+
+SYN --------------------->
+
+         <--------------- SYN + ACK
+
+ACK --------------------->
+
+Connection established
+```
+
+<Mermaid
+  chart={`
+sequenceDiagram
+  participant Client
+  participant Server
+  Client->>Server: SYN
+  Server->>Client: SYN + ACK
+  Client->>Server: ACK
+  Note over Client,Server: Connection established
+`}
+  caption="SYN, SYN-ACK, and ACK establish a TCP connection"
+/>
+
+- **SYN** — the client says: "I want to start a connection."
+- **SYN + ACK** — the server replies: "I received your request and I am ready."
+- **ACK** — the client replies: "Great, let's begin."
+
+Now both sides are connected.
+
+<Callout type="remember">
+  TCP handshake happens **after DNS lookup**. Without an IP address, the browser doesn't know which server it should connect to.
+</Callout>
+
+### What TCP guarantees
+
+After the handshake, TCP helps with:
+
+| Guarantee | Meaning |
+| --- | --- |
+| Reliability | Lost packets are retransmitted |
+| Ordering | Bytes are delivered in order |
+| Connection state | Both sides know the session exists |
+
+Large HTTP responses are split into packets.
+
+Different packets may travel different routes.
+
+TCP reassembles them correctly before the browser processes them.
+
+### Why TCP is slower than UDP
+
+Because TCP does extra work:
+
+- handshake
+- acknowledgements
+- ordering
+- retransmission
+- congestion control
+
+That extra work improves reliability, but it costs time.
+
+### TCP advantages and disadvantages
+
+**Advantages**
+
+- Reliable delivery
+- Ordered data
+- Excellent for webpages, files, and email underlays
+
+**Disadvantages**
+
+- Higher latency than UDP
+- More overhead
+- Can feel slow for some real-time media workloads
+
+### TCP real-world example
+
+Web browsing, many API calls, and file downloads rely on TCP under the hood.
+
+HTTPS still needs TCP underneath, then TLS on top.
+
+<Callout type="tip">
+  Interview angle: explain SYN, SYN-ACK, and ACK, then say TCP prioritizes correctness over raw speed.
+</Callout>
+
+<Callout type="remember">
+  TCP creates a reliable connection before application data is sent. The handshake uses three messages: SYN, SYN-ACK, and ACK.
+</Callout>
+
+---
+
+## UDP — User Datagram Protocol
+
+UDP is a transport protocol built for speed and simplicity.
+
+It is useful when freshness matters more than perfect delivery.
+
+<Callout type="definition">
+  **User Datagram Protocol (UDP)** is a connectionless transport protocol. It sends packets without a formal handshake and without guaranteeing delivery.
+</Callout>
+
+### How UDP works
+
+UDP is intentionally simple:
+
+- no connection setup handshake like TCP
+- no automatic packet ordering guarantee
+- no automatic retransmission
+- lower overhead
+- faster in many real-time scenarios
+
+```text
+Sender  ---- datagram ----►  Receiver
+Sender  ---- datagram ----►  Receiver
+```
+
+There is no long setup ritual before the first packet.
+
+### When should we use UDP?
+
+Use UDP when being current is more important than being perfect:
+
+- video calls
+- live streaming
+- online gaming
+- Domain Name System (DNS) lookups in many cases
+
+### Why losing one packet in a video call is acceptable
+
+Imagine a video call.
+
+If one tiny frame of your face is lost, the app can skip it and continue with the next frame.
+
+If the app paused everything to retransmit that old frame, the conversation would feel laggy.
+
+For live media, being slightly imperfect but current is often better than being perfectly late.
+
+### UDP advantages and disadvantages
+
+**Advantages**
+
+- Fast
+- Simple
+- Low overhead
+- Great for real-time data
+
+**Disadvantages**
+
+- Not reliable by itself
+- No built-in ordering guarantee
+- The application may need to handle loss if required
+
+### UDP real-world example
+
+Video calls and many games prefer low delay.
+
+A short glitch is better than freezing the whole stream.
+
+<Callout type="tip">
+  Interview angle: choose UDP when delay is worse than loss, and choose TCP when correctness matters more than speed.
+</Callout>
+
+<Callout type="remember">
+  UDP prioritizes speed and simplicity. Perfect delivery is not guaranteed.
+</Callout>
+
+## Key Takeaways
+
+- WebSocket enables persistent full-duplex communication for live apps.
+- TCP prioritizes reliable, ordered delivery.
+- UDP prioritizes speed and low overhead.
+- Losing one packet in a video call is often acceptable; delaying the whole call is not.
+- Choose WebSocket for chat and live updates.
+- Choose TCP when correctness matters. Choose UDP when speed matters more.
+
+## Revision (30 Seconds)
+
+1. WebSocket keeps a live two-way channel.
+2. Full duplex means both sides can talk at once.
+3. TCP is reliable and connection-oriented.
+4. UDP is fast and connectionless.
+5. Video calls can tolerate small packet loss.

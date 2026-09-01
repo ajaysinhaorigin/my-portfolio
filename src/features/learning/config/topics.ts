@@ -69,4 +69,5 @@ export const categoryColors: Record<string, string> = {
   architecture: "#06b6d4",
   storage: "#14b8a6",
   queues: "#ec4899",
+  "design-patterns": "#f59e0b",
 };

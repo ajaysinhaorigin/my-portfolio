@@ -51,10 +51,18 @@ export type NavItem = {
   href: string;
 };
 
-export type NavSection = {
+/** A collapsible group of chapters inside a module (e.g. Web Fundamentals). */
+export type NavGroup = {
   title: string;
   color: string;
   items: NavItem[];
+};
+
+/** A top-level module in a track (e.g. Networking). */
+export type NavSection = {
+  title: string;
+  color: string;
+  groups: NavGroup[];
 };
 
 export type TopicStatus = "available" | "coming-soon";

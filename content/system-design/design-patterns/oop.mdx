@@ -1,0 +1,404 @@
+---
+title: "Object-Oriented Programming (OOP)"
+description: "The four pillars of OOP explained simply in JavaScript — classes, objects, encapsulation, abstraction, inheritance, and polymorphism."
+difficulty: "beginner"
+readingTime: "10 mins"
+lastUpdated: "August 2026"
+category: "design-patterns"
+tags: ["oop", "javascript", "classes", "objects", "encapsulation", "inheritance", "polymorphism"]
+prerequisites: []
+relatedTopics: ["solid-principles"]
+summary: "OOP organizes code around objects instead of procedures. Understanding its four pillars — encapsulation, abstraction, inheritance, and polymorphism — is the foundation for every Design Pattern."
+interviewQuestions:
+  - "What is the difference between procedural and object-oriented programming?"
+  - "What are the four pillars of OOP?"
+  - "What is encapsulation and why does it matter?"
+  - "What is the difference between inheritance and composition?"
+  - "What is polymorphism? Give a real example."
+  - "What is abstraction? How is it different from encapsulation?"
+---
+
+## Introduction
+
+Before Design Patterns, before SOLID, there is OOP.
+
+Almost every classic Design Pattern is built on top of object-oriented ideas. If you skip this part, the patterns will feel like magic spells you memorize without understanding.
+
+This chapter gives you everything you need in about 10 minutes.
+
+## Procedural vs Object-Oriented Programming
+
+### Procedural Programming
+
+Before OOP, all code was written as a sequence of instructions — one function after another.
+
+```js
+let userName = "Alice";
+let userAge = 25;
+let userEmail = "alice@example.com";
+
+function greetUser(name) {
+  return `Hello, ${name}!`;
+}
+
+function updateEmail(newEmail) {
+  userEmail = newEmail;
+}
+```
+
+This works for small scripts. But as the app grows:
+
+- Data and functions are scattered everywhere.
+- Any function can accidentally modify any variable.
+- Adding a second user means duplicating all variables.
+- The code becomes impossible to manage.
+
+### Object-Oriented Programming
+
+OOP solves this by packaging **data** and the **functions that operate on that data** together into one unit called an **object**.
+
+```js
+const user = {
+  name: "Alice",
+  age: 25,
+  email: "alice@example.com",
+  greet() {
+    return `Hello, ${this.name}!`;
+  },
+  updateEmail(newEmail) {
+    this.email = newEmail;
+  },
+};
+```
+
+Now the data and the behavior belong together. Adding a second user means creating a second object — not duplicating variables.
+
+<Callout type="definition">
+  **Object-Oriented Programming** is a way to organize code where related data and behavior are grouped into **objects**.
+</Callout>
+
+## Class and Object
+
+A **class** is a blueprint. An **object** is what you build from that blueprint.
+
+Think of a class like an architectural drawing for a house. The drawing describes the layout, rooms, and doors. An object is the actual house built from that drawing.
+
+```js
+// Class = blueprint
+class User {
+  constructor(name, email) {
+    this.name = name;
+    this.email = email;
+  }
+
+  greet() {
+    return `Hello, ${this.name}!`;
+  }
+}
+
+// Objects = actual instances built from the blueprint
+const alice = new User("Alice", "alice@example.com");
+const bob = new User("Bob", "bob@example.com");
+
+console.log(alice.greet()); // Hello, Alice!
+console.log(bob.greet());   // Hello, Bob!
+```
+
+`alice` and `bob` are two separate objects (instances) of the same `User` class. They share the same structure but hold different data.
+
+<Callout type="definition">
+  A **class** is a blueprint for creating objects. An **object** is a specific instance created from a class.
+</Callout>
+
+## Constructor
+
+A constructor is a special method that runs automatically when you create a new object with `new`.
+
+Its job is to set up the initial state of the object.
+
+```js
+class Product {
+  constructor(name, price) {
+    this.name = name;   // sets initial data
+    this.price = price;
+  }
+}
+
+const laptop = new Product("Laptop", 80000);
+console.log(laptop.name);  // Laptop
+console.log(laptop.price); // 80000
+```
+
+Without the constructor, every object would start empty and you would have to manually assign every property after creation.
+
+## The Four Pillars of OOP
+
+These four ideas are the core of OOP. More importantly, each one solves a real problem.
+
+### 1. Encapsulation
+
+**Problem:** Any part of your code can accidentally read or change important data.
+
+**Solution:** Hide the internal data. Only expose what other parts of the code actually need.
+
+```js
+class BankAccount {
+  #balance; // private — nobody outside can touch this directly
+
+  constructor(initialBalance) {
+    this.#balance = initialBalance;
+  }
+
+  deposit(amount) {
+    if (amount > 0) this.#balance += amount;
+  }
+
+  withdraw(amount) {
+    if (amount > 0 && amount <= this.#balance) {
+      this.#balance -= amount;
+    } else {
+      console.log("Invalid withdrawal");
+    }
+  }
+
+  getBalance() {
+    return this.#balance;
+  }
+}
+
+const account = new BankAccount(1000);
+account.deposit(500);
+account.withdraw(200);
+console.log(account.getBalance()); // 1300
+
+// account.#balance = 999999; — this would throw an error
+```
+
+The `#balance` field is private. The only way to interact with it is through `deposit`, `withdraw`, and `getBalance`. This prevents accidental or malicious modification.
+
+<Callout type="analogy">
+  A TV remote encapsulates the complex electronics inside. You interact through the buttons. You never touch the circuits directly.
+</Callout>
+
+<Callout type="definition">
+  **Encapsulation** means hiding internal data and only exposing a controlled interface.
+</Callout>
+
+---
+
+### 2. Abstraction
+
+**Problem:** The user of your code has to understand all the internal complexity to use it.
+
+**Solution:** Hide the complexity. Show only what matters to the user.
+
+```js
+class EmailService {
+  send(to, subject, body) {
+    this.#connectToSMTPServer();
+    this.#authenticate();
+    this.#formatMessage(to, subject, body);
+    this.#transmit();
+    this.#disconnect();
+  }
+
+  #connectToSMTPServer() { /* ... */ }
+  #authenticate()        { /* ... */ }
+  #formatMessage()       { /* ... */ }
+  #transmit()            { /* ... */ }
+  #disconnect()          { /* ... */ }
+}
+
+const mailer = new EmailService();
+mailer.send("user@example.com", "Welcome!", "Thanks for signing up.");
+```
+
+The caller only needs to know `send(to, subject, body)`. All the SMTP logic is hidden.
+
+<Callout type="analogy">
+  When you drive a car, you use the steering wheel and pedals. You don't think about the engine combustion cycle or the fuel injection system.
+</Callout>
+
+<Callout type="definition">
+  **Abstraction** means hiding complexity and exposing only the interface the user needs.
+</Callout>
+
+**Encapsulation vs Abstraction — the difference:**
+
+| | Encapsulation | Abstraction |
+|---|---|---|
+| Focus | Protecting internal data | Hiding complexity |
+| How | Private fields, controlled access | Simple public interface |
+| Goal | Prevent misuse | Reduce cognitive load |
+
+---
+
+### 3. Inheritance
+
+**Problem:** You have multiple classes that share common behavior, but you are writing the same code in each one.
+
+**Solution:** Put the shared code in a parent class. Child classes inherit it automatically.
+
+```js
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+
+  breathe() {
+    return `${this.name} is breathing.`;
+  }
+}
+
+class Dog extends Animal {
+  speak() {
+    return `${this.name} says: Woof!`;
+  }
+}
+
+class Cat extends Animal {
+  speak() {
+    return `${this.name} says: Meow!`;
+  }
+}
+
+const dog = new Dog("Bruno");
+const cat = new Cat("Whiskers");
+
+console.log(dog.breathe()); // Bruno is breathing.
+console.log(dog.speak());   // Bruno says: Woof!
+console.log(cat.breathe()); // Whiskers is breathing.
+console.log(cat.speak());   // Whiskers says: Meow!
+```
+
+`Dog` and `Cat` both inherit `breathe` from `Animal`. They only define what is unique to them.
+
+<Callout type="remember">
+  Inheritance models an **"is-a"** relationship. A `Dog` is an `Animal`. A `Car` is a `Vehicle`.
+</Callout>
+
+#### Composition vs Inheritance
+
+Inheritance is powerful, but it can be overused.
+
+**Composition** means building behavior by combining small, focused objects rather than inheriting from a parent.
+
+```js
+// Inheritance approach — gets complicated fast
+class FlyingSwimmingDuck extends FlyingAnimal /* also needs SwimmingAnimal? */ {}
+
+// Composition approach — combine behaviors as needed
+const canFly    = { fly:  () => "I can fly!"  };
+const canSwim   = { swim: () => "I can swim!" };
+const canQuack  = { quack: () => "Quack!"     };
+
+const duck = Object.assign({}, canFly, canSwim, canQuack);
+duck.fly();   // I can fly!
+duck.swim();  // I can swim!
+duck.quack(); // Quack!
+```
+
+<Callout type="tip">
+  A common rule of thumb: **"Prefer composition over inheritance."** Use inheritance when there is a clear, stable "is-a" relationship. Use composition when behavior needs to be mixed and matched.
+</Callout>
+
+---
+
+### 4. Polymorphism
+
+**Problem:** You have to write separate `if/else` or `switch` blocks for every type of object, even when the action is conceptually the same.
+
+**Solution:** Define the same method name on different classes. Each class implements it its own way. Your calling code does not need to know which type it is dealing with.
+
+```js
+class Shape {
+  area() {
+    throw new Error("area() must be implemented");
+  }
+}
+
+class Circle extends Shape {
+  constructor(radius) {
+    super();
+    this.radius = radius;
+  }
+  area() {
+    return Math.PI * this.radius ** 2;
+  }
+}
+
+class Rectangle extends Shape {
+  constructor(width, height) {
+    super();
+    this.width = width;
+    this.height = height;
+  }
+  area() {
+    return this.width * this.height;
+  }
+}
+
+class Triangle extends Shape {
+  constructor(base, height) {
+    super();
+    this.base = base;
+    this.height = height;
+  }
+  area() {
+    return 0.5 * this.base * this.height;
+  }
+}
+
+// One loop handles all shapes — no if/else needed
+const shapes = [
+  new Circle(5),
+  new Rectangle(4, 6),
+  new Triangle(3, 8),
+];
+
+for (const shape of shapes) {
+  console.log(shape.area());
+}
+// 78.53...
+// 24
+// 12
+```
+
+The loop calls `shape.area()` without caring whether the shape is a circle, rectangle, or triangle. Each object responds correctly.
+
+<Callout type="definition">
+  **Polymorphism** means many forms. The same method name behaves differently depending on the object it is called on.
+</Callout>
+
+<Callout type="analogy">
+  The `+` operator is polymorphic. `1 + 2` adds numbers. `"Hello" + " World"` concatenates strings. Same operator, different behavior.
+</Callout>
+
+## Summary of the Four Pillars
+
+| Pillar | Problem it solves | How |
+|---|---|---|
+| Encapsulation | Uncontrolled access to data | Hide fields, expose a safe interface |
+| Abstraction | Exposing unnecessary complexity | Provide a simple public API |
+| Inheritance | Duplicate code across similar classes | Share behavior through a parent class |
+| Polymorphism | Rigid `if/else` chains for each type | Same method name, different behavior per class |
+
+## Key Takeaways
+
+- OOP groups data and behavior together into objects.
+- A **class** is a blueprint. An **object** is an instance of that blueprint.
+- A **constructor** sets up the object when it is created.
+- **Encapsulation** hides data. **Abstraction** hides complexity.
+- **Inheritance** reuses code via parent–child relationships.
+- **Polymorphism** lets the same method call behave differently per object type.
+- **Composition** is often better than deep inheritance hierarchies.
+
+## Revision (30 Seconds)
+
+1. OOP = data + behavior in one place.
+2. Class = blueprint. Object = instance.
+3. Encapsulation = private fields, public methods.
+4. Abstraction = simple interface, hidden complexity.
+5. Inheritance = child reuses parent's code.
+6. Polymorphism = same method name, different behavior.
+7. Composition = build behavior by combining small pieces.

@@ -1,0 +1,717 @@
+---
+title: "SOLID Principles"
+description: "A deep dive into all five SOLID principles with real JavaScript examples — explained so you can apply them while writing code today."
+difficulty: "intermediate"
+readingTime: "35 mins"
+lastUpdated: "August 2026"
+category: "design-patterns"
+tags: ["solid", "oop", "javascript", "clean-code", "srp", "ocp", "lsp", "isp", "dip"]
+prerequisites: ["oop"]
+relatedTopics: ["oop"]
+summary: "SOLID is a set of five design principles that make your code easier to extend, maintain, and test. Each principle solves a specific class of problems that appear as software grows."
+interviewQuestions:
+  - "What does SOLID stand for?"
+  - "Explain the Single Responsibility Principle with an example."
+  - "What is the Open/Closed Principle? Why is it important?"
+  - "What is the Liskov Substitution Principle? How do you violate it?"
+  - "What is the difference between ISP and SRP?"
+  - "What is Dependency Inversion? How does it relate to Dependency Injection?"
+  - "How do SOLID principles connect to Design Patterns?"
+---
+
+## Introduction
+
+SOLID is a set of five design principles.
+
+Robert C. Martin (Uncle Bob) coined the acronym. Each letter stands for one principle.
+
+```text
+S — Single Responsibility Principle
+O — Open / Closed Principle
+L — Liskov Substitution Principle
+I — Interface Segregation Principle
+D — Dependency Inversion Principle
+```
+
+Why learn them before Design Patterns?
+
+Because Design Patterns are pre-built solutions to common OOP problems — and almost every pattern is an application of one or more SOLID principles. Once you understand SOLID, patterns stop feeling arbitrary.
+
+This chapter goes deep so you can start applying these immediately.
+
+---
+
+## S — Single Responsibility Principle (SRP)
+
+> A class should have only one reason to change.
+
+### The Problem
+
+A class that does too many things becomes a liability.
+
+When a requirement changes, you risk breaking unrelated features. When you want to test one thing, you have to set up ten.
+
+Here is a common violation:
+
+```js
+class UserService {
+  constructor(db) {
+    this.db = db;
+  }
+
+  // Responsibility 1: Database
+  saveUser(user) {
+    this.db.query(`INSERT INTO users ...`, user);
+  }
+
+  getUser(id) {
+    return this.db.query(`SELECT * FROM users WHERE id = ?`, [id]);
+  }
+
+  // Responsibility 2: Validation
+  validateUser(user) {
+    if (!user.email.includes("@")) throw new Error("Invalid email");
+    if (user.password.length < 8) throw new Error("Password too short");
+  }
+
+  // Responsibility 3: Email
+  sendWelcomeEmail(user) {
+    const subject = "Welcome!";
+    const body = `Hi ${user.name}, thanks for signing up.`;
+    EmailClient.send(user.email, subject, body);
+  }
+}
+```
+
+This class has three reasons to change:
+- If the database schema changes.
+- If the validation rules change.
+- If the email template changes.
+
+Changing one part risks breaking the others, and unit testing any single responsibility requires setting up everything.
+
+### The Solution
+
+Split into focused classes — each with exactly one reason to change.
+
+```js
+// Responsibility 1: Database only
+class UserRepository {
+  constructor(db) {
+    this.db = db;
+  }
+
+  save(user) {
+    return this.db.query(`INSERT INTO users ...`, user);
+  }
+
+  findById(id) {
+    return this.db.query(`SELECT * FROM users WHERE id = ?`, [id]);
+  }
+}
+
+// Responsibility 2: Validation only
+class UserValidator {
+  validate(user) {
+    if (!user.email.includes("@")) throw new Error("Invalid email");
+    if (user.password.length < 8) throw new Error("Password too short");
+  }
+}
+
+// Responsibility 3: Email only
+class WelcomeEmailSender {
+  send(user) {
+    const subject = "Welcome!";
+    const body = `Hi ${user.name}, thanks for signing up.`;
+    EmailClient.send(user.email, subject, body);
+  }
+}
+
+// Orchestrator: composes the focused classes
+class UserService {
+  constructor(repository, validator, emailSender) {
+    this.repository = repository;
+    this.validator = validator;
+    this.emailSender = emailSender;
+  }
+
+  register(user) {
+    this.validator.validate(user);
+    this.repository.save(user);
+    this.emailSender.send(user);
+  }
+}
+```
+
+Now each class has exactly one reason to change. Testing `UserValidator` requires zero database or email setup.
+
+<Callout type="tip">
+  A practical test: read your class name aloud, then list everything it does. If the list has more than one item, it probably violates SRP.
+</Callout>
+
+<Callout type="remember">
+  "One reason to change" does not mean "one method." A class can have many methods as long as they all serve the same responsibility.
+</Callout>
+
+---
+
+## O — Open/Closed Principle (OCP)
+
+> A class should be open for extension but closed for modification.
+
+### The Problem
+
+Every time you add a new feature, you go into an existing class and add another `if` or `case` block.
+
+This is dangerous. Touching existing, working code can introduce bugs. Other developers are often afraid to touch it at all.
+
+```js
+class DiscountCalculator {
+  calculate(user, price) {
+    if (user.type === "regular") {
+      return price;
+    } else if (user.type === "premium") {
+      return price * 0.9; // 10% off
+    } else if (user.type === "vip") {
+      return price * 0.8; // 20% off
+    }
+    // Every new user type requires modifying this class
+  }
+}
+```
+
+Adding a "student" user type means opening this class and editing it. Every addition risks breaking every other user type.
+
+### The Solution
+
+Extract the varying behavior into separate classes. The calculator accepts any strategy without needing to know which one.
+
+```js
+// Each strategy is a separate class
+class RegularDiscount {
+  apply(price) { return price; }
+}
+
+class PremiumDiscount {
+  apply(price) { return price * 0.9; }
+}
+
+class VipDiscount {
+  apply(price) { return price * 0.8; }
+}
+
+// New type? Add a new class. Don't touch DiscountCalculator.
+class StudentDiscount {
+  apply(price) { return price * 0.85; }
+}
+
+// The calculator is closed for modification, open for extension
+class DiscountCalculator {
+  calculate(discountStrategy, price) {
+    return discountStrategy.apply(price);
+  }
+}
+
+// Usage
+const calc = new DiscountCalculator();
+console.log(calc.calculate(new VipDiscount(), 1000));     // 800
+console.log(calc.calculate(new StudentDiscount(), 1000)); // 850
+```
+
+`DiscountCalculator` never changes. New discount types are added by creating new classes.
+
+<Callout type="analogy">
+  Think of a power strip. You can plug in new devices without rewiring the strip itself. The strip is open for extension (new plugs), closed for modification (the strip itself is not rewired).
+</Callout>
+
+<Callout type="remember">
+  OCP is often implemented using **Strategy** or **Factory Method** patterns. You will see this again later.
+</Callout>
+
+### Real-World Example in Node.js
+
+```js
+// Instead of this — a switch in a controller
+async function processPayment(req, res) {
+  const { method, amount } = req.body;
+  if (method === "stripe") {
+    await StripeClient.charge(amount);
+  } else if (method === "paypal") {
+    await PayPalClient.charge(amount);
+  }
+  // Adding Razorpay means modifying this function
+}
+
+// Do this instead — each payment provider is its own class
+class StripePayment {
+  async charge(amount) { await StripeClient.charge(amount); }
+}
+
+class PayPalPayment {
+  async charge(amount) { await PayPalClient.charge(amount); }
+}
+
+class RazorpayPayment {
+  async charge(amount) { await RazorpayClient.charge(amount); }
+}
+
+// The controller never changes
+async function processPayment(paymentProvider, amount) {
+  await paymentProvider.charge(amount);
+}
+```
+
+---
+
+## L — Liskov Substitution Principle (LSP)
+
+> A subclass should be usable wherever its parent class is expected — without changing the behavior of the program.
+
+Named after Barbara Liskov, who first stated it in 1987.
+
+### The Problem
+
+Inheritance is sometimes misused. A child class can technically extend a parent but behave in a way that breaks the parent's contract — surprising and breaking callers.
+
+```js
+class Rectangle {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+  }
+
+  setWidth(w)  { this.width = w; }
+  setHeight(h) { this.height = h; }
+
+  area() { return this.width * this.height; }
+}
+
+// A Square IS-A Rectangle, right?
+class Square extends Rectangle {
+  setWidth(w) {
+    this.width = w;
+    this.height = w; // squares must stay equal
+  }
+
+  setHeight(h) {
+    this.width = h;
+    this.height = h;
+  }
+}
+
+// Code that works with any Rectangle
+function resizeAndPrint(rect) {
+  rect.setWidth(5);
+  rect.setHeight(4);
+  console.log(rect.area()); // Expects 20
+}
+
+resizeAndPrint(new Rectangle(2, 2)); // 20 ✓
+resizeAndPrint(new Square(2));       // 25 ✗ — setHeight overrode width too
+```
+
+Substituting `Square` where `Rectangle` is expected produces unexpected results. The LSP is violated.
+
+### Why This Happens
+
+A square **is-a** rectangle mathematically. But in terms of behavior — specifically having independently settable width and height — a `Square` does **not** satisfy the `Rectangle` contract.
+
+LSP is about **behavioral** substitutability, not just type compatibility.
+
+### The Solution
+
+Rethink the hierarchy. Sometimes the inheritance relationship is wrong.
+
+```js
+// Option 1: Remove the inheritance entirely
+class Rectangle {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+  }
+  area() { return this.width * this.height; }
+}
+
+class Square {
+  constructor(side) {
+    this.side = side;
+  }
+  area() { return this.side ** 2; }
+}
+
+// Option 2: Make a read-only Shape base — no setters
+class Shape {
+  area() { throw new Error("area() must be implemented"); }
+}
+
+class ImmutableRectangle extends Shape {
+  constructor(width, height) {
+    super();
+    this.width = width;
+    this.height = height;
+  }
+  area() { return this.width * this.height; }
+}
+
+class ImmutableSquare extends Shape {
+  constructor(side) {
+    super();
+    this.side = side;
+  }
+  area() { return this.side ** 2; }
+}
+```
+
+Now any `Shape` can safely replace any other `Shape` in code that calls `area()`.
+
+### A Practical Rule for Catching LSP Violations
+
+Ask these questions about your subclass:
+
+1. Does it throw exceptions that the parent would not throw?
+2. Does it accept a narrower range of inputs than the parent?
+3. Does it produce side effects the parent doesn't have?
+4. Does calling `super` break things?
+
+If the answer to any of these is yes, you may be violating LSP.
+
+<Callout type="remember">
+  **Design by Contract:** a subclass must honor the parent's pre-conditions, post-conditions, and invariants. It can relax pre-conditions and strengthen post-conditions, but never the reverse.
+</Callout>
+
+---
+
+## I — Interface Segregation Principle (ISP)
+
+> No class should be forced to implement methods it does not use.
+
+### The Problem
+
+When you create a large "fat interface" (or base class with many methods), all classes that implement it are forced to provide implementations for every method — even the ones that make no sense for them.
+
+```js
+// A "fat" base class
+class Worker {
+  work()  { throw new Error("Not implemented"); }
+  eat()   { throw new Error("Not implemented"); }
+  sleep() { throw new Error("Not implemented"); }
+}
+
+class HumanWorker extends Worker {
+  work()  { return "Human is working."; }
+  eat()   { return "Human is eating."; }
+  sleep() { return "Human is sleeping."; }
+}
+
+// A robot worker shouldn't eat or sleep
+class RobotWorker extends Worker {
+  work()  { return "Robot is working."; }
+  eat()   { throw new Error("Robots don't eat!"); } // forced
+  sleep() { throw new Error("Robots don't sleep!"); } // forced
+}
+```
+
+`RobotWorker` is forced to implement `eat` and `sleep` even though they are meaningless for a robot. Any code that calls `robot.eat()` will crash.
+
+### The Solution
+
+Split the fat interface into smaller, focused ones. Each class only implements what it needs.
+
+```js
+// Small, focused "interfaces" as base classes or duck-typed contracts
+class Workable {
+  work() { throw new Error("Not implemented"); }
+}
+
+class Eatable {
+  eat() { throw new Error("Not implemented"); }
+}
+
+class Sleepable {
+  sleep() { throw new Error("Not implemented"); }
+}
+
+// Human implements all three
+class HumanWorker {
+  work()  { return "Human is working."; }
+  eat()   { return "Human is eating."; }
+  sleep() { return "Human is sleeping."; }
+}
+
+// Robot only implements what it needs
+class RobotWorker {
+  work() { return "Robot is working."; }
+}
+```
+
+<Callout type="tip">
+  In TypeScript (which is often used with NestJS), this is even more explicit — you define small interfaces and each class `implements` only the ones it needs. In plain JavaScript, the principle still applies: don't put unrelated methods together in the same base class.
+</Callout>
+
+### ISP vs SRP
+
+These two are related but target different things.
+
+| | SRP | ISP |
+|---|---|---|
+| Perspective | From the class being written | From the class consuming an interface |
+| Question | "Does this class have one responsibility?" | "Am I forcing implementors to include things they don't need?" |
+
+A class can follow SRP perfectly but still violate ISP if it exposes too large an interface for others to implement.
+
+### Real-World Example
+
+```js
+// Bad: one giant logger interface
+class Logger {
+  logToConsole(msg) { throw new Error("Not implemented"); }
+  logToFile(msg)    { throw new Error("Not implemented"); }
+  logToDatabase(msg){ throw new Error("Not implemented"); }
+  logToCloud(msg)   { throw new Error("Not implemented"); }
+}
+
+// Every logger must implement all four — most will throw
+
+// Good: focused contracts
+class ConsoleLogger {
+  log(msg) { console.log(msg); }
+}
+
+class FileLogger {
+  log(msg) { fs.appendFileSync("app.log", msg); }
+}
+
+class CloudLogger {
+  log(msg) { CloudService.send(msg); }
+}
+```
+
+Each logger implements exactly what it provides. Callers depend on the small, focused contract they care about.
+
+---
+
+## D — Dependency Inversion Principle (DIP)
+
+> High-level modules should not depend on low-level modules. Both should depend on abstractions.
+
+This is the most powerful principle — and the one that ties everything together for MERN and NestJS development.
+
+### The Problem
+
+When a high-level module (e.g., your business logic) directly creates or imports a low-level module (e.g., a specific database or email service), they become tightly coupled.
+
+```js
+// Low-level module
+class MySQLDatabase {
+  save(data) {
+    console.log("Saving to MySQL:", data);
+  }
+}
+
+// High-level module — directly depends on MySQLDatabase
+class UserService {
+  constructor() {
+    this.db = new MySQLDatabase(); // tightly coupled
+  }
+
+  register(user) {
+    this.db.save(user);
+  }
+}
+
+const service = new UserService();
+service.register({ name: "Alice" });
+```
+
+Problems:
+- To test `UserService`, a real MySQL connection is required.
+- Switching to PostgreSQL means editing `UserService`.
+- `UserService` and `MySQLDatabase` are inseparable.
+
+### The Solution
+
+`UserService` should depend on an **abstraction** (what a database can do), not a **concrete implementation** (MySQL specifically). The concrete class is injected from outside.
+
+```js
+// Abstraction — a contract
+class Database {
+  save(data) { throw new Error("save() must be implemented"); }
+}
+
+// Low-level module — implements the abstraction
+class MySQLDatabase extends Database {
+  save(data) { console.log("Saving to MySQL:", data); }
+}
+
+class MongoDatabase extends Database {
+  save(data) { console.log("Saving to MongoDB:", data); }
+}
+
+// In-memory version for tests
+class InMemoryDatabase extends Database {
+  constructor() {
+    super();
+    this.store = [];
+  }
+  save(data) { this.store.push(data); }
+}
+
+// High-level module — depends on the abstraction
+class UserService {
+  constructor(db) { // receive the dependency from outside
+    this.db = db;
+  }
+
+  register(user) {
+    this.db.save(user);
+  }
+}
+
+// Production
+const service = new UserService(new MySQLDatabase());
+service.register({ name: "Alice" });
+
+// Testing — no MySQL required
+const testDb = new InMemoryDatabase();
+const testService = new UserService(testDb);
+testService.register({ name: "Alice" });
+console.log(testDb.store); // [{ name: "Alice" }]
+```
+
+`UserService` never imports `MySQLDatabase`. It only uses whatever it receives. Swapping databases does not touch `UserService` at all.
+
+### DIP vs Dependency Injection
+
+These two terms are often confused.
+
+| | Dependency Inversion Principle | Dependency Injection |
+|---|---|---|
+| What it is | A design principle | A technique to implement that principle |
+| What it says | Depend on abstractions, not concretions | Pass dependencies from outside instead of creating them inside |
+| Relationship | DIP is the goal | DI is one way to achieve it |
+
+DIP is the **why**. Dependency Injection is the **how**.
+
+### NestJS Connection
+
+NestJS has a built-in Dependency Injection container. This is DIP applied at the framework level.
+
+```typescript
+// NestJS example
+@Injectable()
+export class UserService {
+  constructor(
+    @InjectRepository(User) private userRepo: Repository<User>
+    // NestJS injects the repository — UserService never "new"s it
+  ) {}
+
+  register(dto: CreateUserDto) {
+    return this.userRepo.save(dto);
+  }
+}
+```
+
+You don't `new UserService(new TypeOrmRepository(...))`. NestJS resolves and injects all dependencies automatically, following exactly the pattern DIP describes.
+
+<Callout type="tip">
+  In plain Express, you do DI manually by passing dependencies into functions or constructors. In NestJS, the framework handles it. The principle is the same — the class never creates its dependencies.
+</Callout>
+
+### A Complete DIP Example in Express
+
+```js
+// database/database.js — abstraction
+class Database {
+  async findById(id) { throw new Error("Not implemented"); }
+  async save(entity) { throw new Error("Not implemented"); }
+}
+
+// database/mongo-database.js — concrete
+class MongoDatabase extends Database {
+  async findById(id) { return MongoClient.find({ _id: id }); }
+  async save(entity) { return MongoClient.insertOne(entity); }
+}
+
+// services/user-service.js — high-level
+class UserService {
+  constructor(db) {
+    this.db = db;
+  }
+
+  async getUser(id) {
+    return this.db.findById(id);
+  }
+
+  async createUser(data) {
+    return this.db.save(data);
+  }
+}
+
+// routes/user-routes.js — wires everything together
+const db = new MongoDatabase();
+const userService = new UserService(db);
+
+router.get("/:id", async (req, res) => {
+  const user = await userService.getUser(req.params.id);
+  res.json(user);
+});
+```
+
+The router composes everything. `UserService` never imports `MongoDatabase`. If you switch to PostgreSQL tomorrow, only `MongoDatabase` changes.
+
+---
+
+## How SOLID Principles Connect
+
+The five principles are not independent rules — they reinforce each other.
+
+```text
+SRP  →  Focused classes make OCP easier to implement
+OCP  →  Extending behavior without modification requires LSP-safe hierarchies
+LSP  →  Safe inheritance makes ISP easier to design
+ISP  →  Small focused interfaces make DIP practical
+DIP  →  Injecting abstractions makes SRP, OCP, and LSP enforceable
+```
+
+When you combine all five, you get code that:
+- Is easy to read and understand (SRP).
+- Is easy to extend without fear (OCP).
+- Is predictable and trustworthy (LSP).
+- Is composed of focused, minimal contracts (ISP).
+- Is testable and loosely coupled (DIP).
+
+---
+
+## SOLID and Design Patterns
+
+| Principle | Patterns that apply it |
+|---|---|
+| SRP | Command, Observer, Repository |
+| OCP | Strategy, Decorator, Factory Method |
+| LSP | Template Method, all behavioral patterns |
+| ISP | Adapter, Facade |
+| DIP | Abstract Factory, Dependency Injection, Service Locator |
+
+After this chapter, when you read about the **Strategy Pattern**, you will immediately recognize it as OCP applied to algorithms. When you see **Decorator**, you will see OCP applied to object behavior.
+
+---
+
+## Key Takeaways
+
+- **SRP** — one class, one reason to change. Split large classes into focused ones.
+- **OCP** — extend behavior by adding new classes, not by modifying existing ones.
+- **LSP** — a subclass must work anywhere its parent works, without surprises.
+- **ISP** — keep interfaces small. Don't force classes to implement what they don't need.
+- **DIP** — high-level classes depend on abstractions, not concrete implementations. Inject dependencies from outside.
+- Together, SOLID makes code easier to extend, maintain, and test.
+- NestJS's DI system is a direct implementation of DIP.
+
+---
+
+## Revision (30 Seconds)
+
+1. **S** — One class, one job.
+2. **O** — Add features by adding classes, not editing them.
+3. **L** — Subtypes must be drop-in replacements for their parent.
+4. **I** — Don't force a class to implement methods it doesn't need.
+5. **D** — Depend on abstractions. Inject concrete classes from outside.

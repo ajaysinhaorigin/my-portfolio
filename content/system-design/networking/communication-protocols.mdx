@@ -1,0 +1,197 @@
+---
+title: "Protocols Overview"
+description: "What communication protocols are, why computers need them, and how to choose the right one."
+difficulty: "beginner"
+readingTime: "6 mins"
+lastUpdated: "August 2026"
+category: "networking"
+tags: ["protocols", "networking", "osi", "tcp-ip"]
+prerequisites: ["how-web-works"]
+relatedTopics: ["web-protocols", "realtime-protocols", "transfer-protocols"]
+summary: "A communication protocol is a shared set of rules for how computers talk. This overview explains why protocols exist, where they sit in OSI and TCP/IP models, and how to choose between them."
+interviewQuestions:
+  - "What is a communication protocol?"
+  - "Why do computers need protocols?"
+  - "What is the difference between the OSI model and the TCP/IP model?"
+  - "Which layer do HTTP and TCP belong to?"
+  - "How do you choose a protocol in an interview?"
+  - "Name one protocol for secure browsing, live chat, and email."
+lectureSource:
+  course: "Namaste Frontend System Design"
+  instructor: "Akshay Saini"
+  status: "in-progress"
+  revisionCount: 4
+  confidence: 3
+---
+
+## Introduction
+
+When two computers talk over the internet, they need shared rules.
+
+Those rules are called **communication protocols**.
+
+Without protocols, a browser would not know how to ask for a webpage, an email app would not know how to send a message, and a video call would not know how to deliver your voice.
+
+This page is the map.
+
+The detailed chapters for each protocol group come next:
+
+- **Web Protocols** — HTTP, HTTPS (TLS handshake), HTTP/3
+- **Real-Time Protocols** — WebSocket, TCP (three-way handshake), UDP
+- **Transfer Protocols** — SMTP, FTP
+
+## What Is a Communication Protocol?
+
+A communication protocol is an agreed set of rules.
+
+It tells computers:
+
+- how to start a conversation
+- how to format a message
+- how to reply
+- how to handle errors
+- how to end the conversation
+
+If both sides follow the same rules, they can understand each other.
+
+<Callout type="definition">
+  A **protocol** is a shared language and set of rules that computers use to communicate.
+</Callout>
+
+## Why Do Computers Need Protocols?
+
+Computers are built by different companies.
+
+They run different operating systems.
+
+They sit in different countries.
+
+They still need to work together.
+
+Protocols create a common agreement so any compliant device can talk to any other compliant device.
+
+Without protocols:
+
+- messages would be formatted differently on each machine
+- senders and receivers would not know when a message starts or ends
+- security would be inconsistent
+- the internet as we know it could not exist
+
+## Real-Life Analogy
+
+Think about a phone call.
+
+Before you talk about work, both people usually:
+
+1. Pick up the call
+2. Say hello
+3. Confirm they can hear each other
+4. Start the real conversation
+5. Say goodbye and hang up
+
+That informal process is like a protocol.
+
+Computers do the same thing — except their steps are precise and automatic.
+
+<Callout type="analogy">
+  Protocols are like traffic rules. Cars from different brands can share the same road because everyone follows the same rules.
+</Callout>
+
+## Why Every Protocol Was Created
+
+Each protocol exists to solve a specific problem.
+
+| Protocol | Problem it was built to solve |
+| --- | --- |
+| HTTP | Request and receive webpages |
+| HTTPS | Do the same thing securely |
+| HTTP/3 (QUIC) | Make web traffic faster and more resilient |
+| WebSocket | Allow live two-way communication |
+| TCP | Deliver data reliably and in order |
+| UDP | Deliver data quickly with less overhead |
+| SMTP | Send email between servers |
+| FTP | Upload and download files |
+
+## OSI Model and TCP/IP Model
+
+You do **not** need deep theory right now.
+
+Just keep this mental map.
+
+### OSI Model
+
+The Open Systems Interconnection (OSI) model is a teaching model with 7 layers.
+
+Higher layers care about applications, like web browsing.
+
+Lower layers care about packets, routing, and physical delivery.
+
+We will study it in depth later.
+
+### TCP/IP Model
+
+The Transmission Control Protocol / Internet Protocol (TCP/IP) model is closer to how the real internet works.
+
+```text
+Application Layer   →  HTTP, HTTPS, WebSocket, SMTP, FTP, DNS
+Transport Layer     →  TCP, UDP, QUIC
+Internet Layer      →  IP
+Network Access      →  Wi-Fi, Ethernet, cables
+```
+
+<Callout type="remember">
+  HTTP, HTTPS, WebSocket, SMTP, and FTP live at the application layer. TCP and UDP live at the transport layer. QUIC is a modern transport that usually sits under HTTP/3.
+</Callout>
+
+## Protocol Comparison Table
+
+| Protocol | Transport Layer | Connection Type | Encrypted | Reliable | Speed | Best Use Case | Real Examples |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| HTTP | Usually TCP | Request / Response | No (by itself) | Depends on TCP | Medium | Fetch webpages and APIs | Browser page load |
+| HTTPS | TCP + TLS | Request / Response | Yes | Depends on TCP | Medium | Secure web browsing | Banking sites, logins |
+| HTTP/3 | QUIC over UDP | Request / Response with streams | Yes | Managed by QUIC | Fast | Modern web performance | HTTP/3-enabled websites |
+| WebSocket | Usually TCP | Persistent full duplex | Optional (often with TLS) | Depends on transport | Fast for live data | Real-time apps | Chat, games, live dashboards |
+| TCP | Transport itself | Connection-oriented | No (by itself) | Yes | Slower than UDP | Reliable data delivery | Web and email underlays |
+| UDP | Transport itself | Connectionless | No (by itself) | No (by itself) | Very fast | Real-time media | Video calls, gaming, DNS |
+| SMTP | Usually TCP | Session for sending mail | Optional / recommended with TLS | Depends on TCP | Medium | Sending email | Gmail → Outlook delivery |
+| FTP | Usually TCP | Control + data channels | No (classic FTP) | Depends on TCP | Medium | File upload / download | Website deployment |
+
+## Which Protocol Should I Use?
+
+Use this as a beginner decision guide.
+
+| Scenario | Prefer |
+| --- | --- |
+| Loading a website | HTTPS |
+| Watching Netflix in a browser | HTTPS |
+| Video call | UDP-based media stack |
+| Live chat app | WebSocket |
+| Stock price ticker | WebSocket |
+| Sending an email | SMTP |
+| Syncing inbox across devices | IMAP for receiving |
+| Uploading website files | FTP or a secure alternative |
+| DNS lookup | Often UDP |
+| Need maximum reliability for file-like data | TCP under the application protocol |
+
+<Callout type="tip">
+  In interviews, first state the requirement: security, reliability, live updates, or raw speed. Then choose the protocol that matches that requirement.
+</Callout>
+
+## Key Takeaways
+
+- A communication protocol is a shared set of rules for computer conversations.
+- Different protocols exist because different problems need different trade-offs.
+- Application protocols sit above transport protocols.
+- HTTPS is for secure browsing. WebSocket is for live updates. SMTP is for sending email.
+- TCP prioritizes reliability. UDP prioritizes speed.
+- Understanding why a protocol exists is more important than memorizing textbook lines.
+- Use this page as the map, then read the focused chapters for depth.
+
+## Revision (30 Seconds)
+
+1. Protocols are shared rules for computer talk.
+2. Application layer handles meaning. Transport layer handles delivery style.
+3. Secure website → HTTPS.
+4. Live chat → WebSocket.
+5. Send email → SMTP.
+6. Need reliability → TCP. Need speed → UDP.

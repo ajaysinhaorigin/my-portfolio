@@ -1,6 +1,6 @@
 import { ArrowUpRight, Brain, Cloud, Cpu, Network, Server } from "lucide-react";
 import Link from "next/link";
-import { getNavigation } from "@/features/learning/config/navigation";
+import { getNavigation, countChapters } from "@/features/learning/config/navigation";
 import { topicList } from "@/features/learning/config/topics";
 import { Badge } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
@@ -34,10 +34,7 @@ export default function ExploreLanding() {
           const Icon = iconMap[topic.icon];
           const modules =
             topic.status === "available" ? getNavigation(topic.slug) : [];
-          const chapterCount = modules.reduce(
-            (sum, section) => sum + section.items.length,
-            0,
-          );
+          const chapterCount = countChapters(modules);
           const isAvailable = topic.status === "available";
 
           const card = (

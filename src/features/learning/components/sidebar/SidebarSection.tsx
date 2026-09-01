@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import type { NavSection } from "@/features/learning/types/article";
 import { cn } from "@/shared/utils";
-import SidebarLink from "./SidebarLink";
+import SidebarGroup from "./SidebarGroup";
 
 type SidebarSectionProps = {
   section: NavSection;
@@ -16,14 +16,16 @@ type SidebarSectionProps = {
 export default function SidebarSection({
   section,
   activeHref,
-  defaultOpen = false,
+  defaultOpen = true,
   onNavigate,
 }: SidebarSectionProps) {
-  const hasActiveChild = section.items.some((item) => item.href === activeHref);
+  const hasActiveChild = section.groups.some((group) =>
+    group.items.some((item) => item.href === activeHref),
+  );
   const [open, setOpen] = useState(defaultOpen || hasActiveChild);
 
   return (
-    <div className="mb-2">
+    <div className="mb-3">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -45,14 +47,13 @@ export default function SidebarSection({
       </button>
 
       {open ? (
-        <div className="mt-1 ml-2 space-y-0.5 border-l border-border pl-2">
-          {section.items.map((item) => (
-            <SidebarLink
-              key={item.href}
-              href={item.href}
-              title={item.title}
-              active={item.href === activeHref}
-              accentColor={section.color}
+        <div className="mt-1 ml-3 space-y-1 border-l border-border pl-2">
+          {section.groups.map((group) => (
+            <SidebarGroup
+              key={group.title}
+              group={group}
+              activeHref={activeHref}
+              defaultOpen
               onNavigate={onNavigate}
             />
           ))}

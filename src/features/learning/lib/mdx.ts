@@ -4,7 +4,7 @@ import rehypePrettyCode from "rehype-pretty-code";
 import type { ReactElement } from "react";
 import { mdxComponents } from "@/features/learning/components/mdx";
 import type { ArticleFrontmatter } from "@/features/learning/types/article";
-import { slugify } from "@/features/learning/lib/headings";
+import { createUniqueSlugger } from "@/features/learning/lib/headings";
 
 const prettyCodeOptions = {
   theme: {
@@ -24,6 +24,8 @@ function rehypeSlugHeadings() {
       children?: Array<{ type: string; value?: string; children?: unknown[] }>;
     }>;
   }) => {
+    const uniqueSlug = createUniqueSlugger();
+
     const visit = (node: {
       type: string;
       tagName?: string;
@@ -33,12 +35,12 @@ function rehypeSlugHeadings() {
       if (
         node.type === "element" &&
         node.tagName &&
-        /^h[2-4]$/.test(node.tagName)
+        /^h[2-3]$/.test(node.tagName)
       ) {
         const text = collectText(node);
         node.properties = {
           ...node.properties,
-          id: slugify(text),
+          id: uniqueSlug(text),
         };
       }
 

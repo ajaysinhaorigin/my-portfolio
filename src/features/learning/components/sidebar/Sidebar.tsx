@@ -8,6 +8,7 @@ import type { NavSection, TopicConfig } from "@/features/learning/types/article"
 import ThemeToggle from "@/shared/components/navigation/theme-toggle";
 import { Button } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
+import { countChapters } from "@/features/learning/config/navigation";
 import SidebarSection from "./SidebarSection";
 
 type SidebarProps = {
@@ -57,8 +58,7 @@ export default function Sidebar({ topic, sections }: SidebarProps) {
               {sections.length}{" "}
               {sections.length === 1 ? "module" : "modules"}
               {" · "}
-              {sections.reduce((sum, section) => sum + section.items.length, 0)}{" "}
-              chapters
+              {countChapters(sections)} chapters
             </p>
           </div>
         </div>
@@ -70,7 +70,6 @@ export default function Sidebar({ topic, sections }: SidebarProps) {
             key={section.title}
             section={section}
             activeHref={pathname}
-            defaultOpen
             onNavigate={() => setMobileOpen(false)}
           />
         ))}

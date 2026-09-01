@@ -12,6 +12,7 @@ export type {
   ArticleMeta,
   Article,
   NavItem,
+  NavGroup,
   NavSection,
   TopicStatus,
   TopicConfig,

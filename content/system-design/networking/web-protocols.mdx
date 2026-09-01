@@ -1,0 +1,414 @@
+---
+title: "Web Protocols — HTTP, HTTPS, and HTTP/3"
+description: "HTTP, HTTPS, and HTTP/3 (QUIC) explained simply — request/response, security, and modern web performance."
+difficulty: "beginner"
+readingTime: "12 mins"
+lastUpdated: "August 2026"
+category: "networking"
+tags: ["http", "https", "http3", "quic", "tls"]
+prerequisites: ["communication-protocols", "how-web-works"]
+relatedTopics: ["communication-protocols", "realtime-protocols", "transfer-protocols", "http"]
+summary: "HTTP is the request/response language of the web. HTTPS adds TLS security and a certificate handshake. HTTP/3 uses QUIC over UDP for better modern performance."
+interviewQuestions:
+  - "What is HTTP?"
+  - "Why is HTTP called a stateless protocol?"
+  - "What is Keep-Alive?"
+  - "What is the difference between HTTP and HTTPS?"
+  - "What is the purpose of the TLS Handshake?"
+  - "Does the server share its private key?"
+  - "What three security properties does HTTPS provide?"
+  - "Why was HTTP/3 created?"
+  - "What transport does HTTP/3 use?"
+  - "What is multiplexing?"
+lectureSource:
+  course: "Namaste Frontend System Design"
+  instructor: "Akshay Saini"
+  status: "in-progress"
+  revisionCount: 2
+  confidence: 3
+---
+
+## Introduction
+
+This chapter covers the protocols that power most website loading.
+
+You will learn:
+
+- HyperText Transfer Protocol (HTTP)
+- HyperText Transfer Protocol Secure (HTTPS)
+- Transport Layer Security (TLS) handshake basics
+- HyperText Transfer Protocol Version 3 over Quick UDP Internet Connections (HTTP/3 / QUIC)
+
+<Callout type="note">
+  For the big-picture map of all protocols, start with the **Protocols Overview** chapter.
+</Callout>
+
+---
+
+## HTTP — HyperText Transfer Protocol
+
+HTTP is the protocol browsers and servers use to request and transfer web content.
+
+That content can be HTML, CSS, JavaScript, images, or JSON data.
+
+<Callout type="definition">
+  **HyperText Transfer Protocol (HTTP)** is a request/response protocol used by the World Wide Web.
+</Callout>
+
+### Why do we need HTTP?
+
+Without HTTP, a browser would not have a standard way to say:
+
+> "Please give me the homepage of this website."
+
+And a server would not have a standard way to reply:
+
+> "Here is the HTML for that page."
+
+### How does HTTP work?
+
+HTTP usually runs over Transmission Control Protocol (TCP).
+
+The basic model is simple:
+
+1. Client opens a connection
+2. Client sends an HTTP request
+3. Server processes the request
+4. Server sends an HTTP response
+5. Browser uses the response to show the page
+
+HTTP is **stateless**.
+
+That means each request is independent.
+
+The server does not automatically remember previous requests unless cookies, tokens, or sessions are added on top.
+
+```text
+Client (Browser)
+       │
+       ▼
+TCP Connection
+       │
+       ▼
+HTTP Request  ──────────────────►  Server
+                                      │
+                                      ▼
+                                 Process request
+                                      │
+HTTP Response ◄───────────────────────┘
+       │
+       ▼
+Browser shows page
+```
+
+<Mermaid
+  chart={`
+sequenceDiagram
+  participant Browser
+  participant Server
+  Browser->>Server: TCP Connection
+  Browser->>Server: HTTP Request
+  Server->>Browser: HTTP Response
+`}
+  caption="HTTP request/response over a TCP connection"
+/>
+
+### Methods, headers, and status codes
+
+| Method | Meaning | Common use |
+| --- | --- | --- |
+| GET | Read data | Open a webpage |
+| POST | Send data / create | Submit a form |
+| PUT | Replace a resource | Update a full profile |
+| PATCH | Partially update | Change only one field |
+| DELETE | Remove a resource | Delete an item |
+
+Common headers:
+
+- `Host` — which website is being requested
+- `Content-Type` — format of the body
+- `Authorization` — login credentials or tokens
+- `Cache-Control` — caching rules
+
+Basic status codes:
+
+| Code | Meaning |
+| --- | --- |
+| 200 | Success |
+| 301 / 302 | Redirect |
+| 400 | Bad request |
+| 401 | Unauthorized |
+| 404 | Not found |
+| 500 | Server error |
+
+### Keep-Alive and why HTTP is not secure
+
+Keep-Alive allows the same TCP connection to be reused for multiple requests.
+
+That reduces overhead and makes pages load faster.
+
+Plain HTTP does **not** encrypt data.
+
+Anyone on the network path can potentially read passwords, read cookies, or modify responses.
+
+That is why modern websites use HTTPS.
+
+### HTTP advantages and disadvantages
+
+**Advantages**
+
+- Simple request/response model
+- Easy to understand and debug
+- Works everywhere on the web
+
+**Disadvantages**
+
+- Not secure by itself
+- Stateless by default
+- Not ideal for continuous live updates
+
+### HTTP real-world example
+
+When you open a website, your browser sends a GET request.
+
+The server responds with HTML and related assets.
+
+Then the browser starts rendering.
+
+<Callout type="mistake" title="Common Misconception">
+  People think HTTP and HTTPS are completely different languages. They are not. HTTPS is HTTP delivered over a secure channel.
+</Callout>
+
+<Callout type="tip">
+  Interview angle: explain that HTTP is request/response and stateless, then say why Keep-Alive and HTTPS matter.
+</Callout>
+
+<Callout type="remember">
+  HTTP is the language of the web. A client sends a request. A server sends a response. It is simple — but not secure without TLS.
+</Callout>
+
+---
+
+## HTTPS — HyperText Transfer Protocol Secure
+
+HTTPS protects web traffic from eavesdropping and tampering.
+
+It does this by combining HTTP with encryption and identity checks.
+
+<Callout type="definition">
+  **HyperText Transfer Protocol Secure (HTTPS)** is HTTP running over Transport Layer Security (TLS).
+</Callout>
+
+### Why was HTTPS created?
+
+Because the internet is a shared network.
+
+Without HTTPS:
+
+- your password can be intercepted on public Wi-Fi
+- an attacker can change a webpage before it reaches you
+- you cannot be sure you are talking to the real website
+
+### Difference from HTTP
+
+| | HTTP | HTTPS |
+| --- | --- | --- |
+| Encryption | No | Yes |
+| Default port | 80 | 443 |
+| URL starts with | `http://` | `https://` |
+| Safe for passwords | No | Yes |
+
+In older materials you may still see Secure Sockets Layer (SSL).
+
+Today, the modern protocol is Transport Layer Security (TLS).
+
+### Public key, private key, and session key
+
+HTTPS uses cryptography.
+
+- **Public key** — can be shared with anyone
+- **Private key** — stays only on the server
+- **Session key** — a temporary shared key used to encrypt the actual data for that visit
+
+### TLS Handshake
+
+Before any sensitive data is sent, the browser and server create a secure connection.
+
+This process is called the **TLS Handshake**.
+
+Typical order:
+
+1. DNS finds the IP
+2. TCP three-way handshake opens a connection
+3. **TLS handshake** secures that connection
+4. HTTP request/response rides on the encrypted channel
+
+At a high level during the TLS handshake:
+
+- The server sends its SSL/TLS certificate
+- The browser checks whether the certificate is trusted
+- Both sides agree on encryption keys
+- A secure connection is created
+
+```text
+Browser                         Server
+   │                               │
+   │──── TCP Connection ──────────►│
+   │──── ClientHello ─────────────►│
+   │◄─── Certificate + Public Key ─│
+   │──── Key exchange ────────────►│
+   │──── Encrypted HTTP traffic ──►│
+```
+
+<Mermaid
+  chart={`
+sequenceDiagram
+  participant Browser
+  participant Server
+  Browser->>Server: TCP Connection
+  Browser->>Server: ClientHello
+  Server->>Browser: ServerHello + Certificate
+  Browser->>Browser: Verify certificate
+  Browser->>Server: Key exchange
+  Note over Browser,Server: Encrypted HTTP traffic
+`}
+  caption="Simplified TLS handshake before encrypted HTTP traffic"
+/>
+
+<Callout type="remember">
+  The server's **private key never leaves the server**. Only the certificate and public key are shared with the browser.
+</Callout>
+
+If the certificate is expired, mismatched, or untrusted, the browser shows a warning.
+
+### Encryption, authentication, and integrity
+
+HTTPS gives three major security properties:
+
+- **Encryption** — outsiders cannot easily read the data
+- **Authentication** — browser can verify the website's identity through the certificate
+- **Integrity** — data cannot be silently modified in transit
+
+### HTTPS advantages and disadvantages
+
+**Advantages**
+
+- Protects sensitive data
+- Builds user trust
+- Required by modern browsers for many features
+
+**Disadvantages**
+
+- Slight connection overhead compared with plain HTTP
+- Needs certificates and correct server configuration
+
+### HTTPS real-world example
+
+Online banking, login pages, shopping checkouts, and almost every serious website today use HTTPS.
+
+<Callout type="mistake" title="Common Misconception">
+  HTTPS does not mean a website is trustworthy in every way. It means the connection is encrypted and the certificate checks out.
+</Callout>
+
+<Callout type="tip">
+  Interview angle: say HTTPS = HTTP + TLS, then mention encryption, authentication, integrity, and that the private key never leaves the server.
+</Callout>
+
+<Callout type="remember">
+  HTTPS is HTTP plus TLS. After the TLS handshake succeeds, HTTP requests and responses are encrypted.
+</Callout>
+
+---
+
+## HTTP/3 and QUIC — Quick UDP Internet Connections
+
+HTTP/3 is the newest major version of HTTP.
+
+It usually runs over Quick UDP Internet Connections (QUIC).
+
+QUIC uses User Datagram Protocol (UDP) instead of Transmission Control Protocol (TCP).
+
+<Callout type="definition">
+  **HTTP/3** is a modern HTTP version designed for better speed and resilience. **QUIC** is the transport underneath it.
+</Callout>
+
+### Why was HTTP/3 created?
+
+HTTP/1.1 and HTTP/2 improved the web a lot.
+
+But they still sat on top of TCP.
+
+TCP reliability is useful, but it can also create delays when networks are unstable — especially on mobile networks.
+
+Google created QUIC to reduce connection setup time, recover better from packet loss, and improve real-world performance.
+
+### How HTTP/3 works
+
+HTTP/3 does **not** mean the web becomes unreliable like basic UDP.
+
+QUIC rebuilds reliability, encryption, and stream management on top of UDP.
+
+```text
+Browser
+   │
+   ▼
+UDP Connection (QUIC)
+   │
+   ├── Stream 1  → HTML
+   ├── Stream 2  → CSS
+   └── Stream 3  → Images
+   │
+   ▼
+Server
+```
+
+Key ideas in simple English:
+
+- **Faster connection** — setup can be quicker than classic TCP + TLS
+- **Multiplexing** — many requests can travel together as separate streams
+- **Better packet recovery** — one lost packet is less likely to freeze everything
+- **Header compression** — repeated header data is sent more efficiently
+
+### HTTP/3 advantages and disadvantages
+
+**Advantages**
+
+- Better performance in many real networks
+- Strong encryption as part of the design
+- Better stream independence than older setups
+
+**Disadvantages**
+
+- Not every network supports it perfectly yet
+- Harder to debug than classic HTTP over TCP for beginners
+
+### HTTP/3 real-world example
+
+Many modern browsers and large platforms support HTTP/3 for faster browsing.
+
+It is especially useful on unstable or mobile networks.
+
+<Callout type="tip">
+  Interview angle: HTTP/3 uses QUIC over UDP to improve speed and recovery compared with older TCP-based HTTP versions.
+</Callout>
+
+<Callout type="remember">
+  HTTP/3 is not "UDP instead of reliability." It is a newer design that keeps reliability while reducing delay.
+</Callout>
+
+## Key Takeaways
+
+- HTTP is the request/response language of the web.
+- HTTP is stateless unless extra session tools are added.
+- HTTPS is HTTP protected by TLS.
+- The server never shares its private key.
+- HTTP/3 uses QUIC over UDP for better modern performance.
+- Choose HTTPS for almost every website today.
+
+## Revision (30 Seconds)
+
+1. HTTP requests and responds.
+2. HTTPS secures HTTP with TLS.
+3. Private key stays on the server.
+4. HTTP/3 uses QUIC over UDP.
+5. Multiplexing means many streams can travel together.
