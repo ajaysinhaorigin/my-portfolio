@@ -9,6 +9,7 @@ import {
 } from "@/features/portfolio";
 
 export default function HomePage() {
+  console.log("HomePage rendered");
   return (
     <>
       <HeroSection />
