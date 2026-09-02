@@ -394,13 +394,34 @@ async function processPayment(paymentProvider, amount) {
 
 ## L — Liskov Substitution Principle (LSP)
 
-> A subclass should be usable wherever its parent class is expected — without changing the behavior of the program.
+> Inheritance is allowed when the child can honestly say: “use me anywhere you used my parent.”
 
 Named after Barbara Liskov, who first stated it in 1987.
+
+### In simple terms
+
+Think of a power socket. Any charger that claims to fit that socket must actually work there — not spark, not demand extra buttons.
+
+In code: if a function expects a `Bird` that can `fly()`, you cannot pass a `Penguin` that throws when `fly()` is called. The penguin is a bird in real life, but it does **not** keep the same promise. That broken promise is an LSP violation.
+
+A shorter test: **can I swap the child in without the caller noticing anything weird?** If no, inheritance is the wrong tool.
+
+### Same word, different contract
+
+A penguin and an ostrich are both birds in real life. That English “is-a” is not enough.
+
+- `feed(bird)` only calls `bird.eat()` — a penguin is fine.
+- `migrate(bird)` calls `bird.fly()` — a penguin (or ostrich) is not fine.
+
+Same animal. Different parent promise. The **contract** decides, not the word “bird.”
+
+If `Bird` promises `fly()`, flightless birds should not extend that `Bird`. Give them a smaller parent (`eat()`, `move()`) or keep them as their own types.
 
 ### The Problem
 
 Inheritance is sometimes misused. A child class can technically extend a parent but behave in a way that breaks the parent's contract — surprising and breaking callers.
+
+The classic example is Square vs Rectangle. A square *is* a rectangle in geometry, so people make `Square extends Rectangle`. That looks right, then breaks.
 
 ```js
 class Rectangle {
@@ -435,17 +456,27 @@ function resizeAndPrint(rect) {
   console.log(rect.area()); // Expects 20
 }
 
-resizeAndPrint(new Rectangle(2, 2)); // 20 ✓
-resizeAndPrint(new Square(2));       // 25 ✗ — setHeight overrode width too
+resizeAndPrint(new Rectangle(2, 2)); // 20 ✓  (5 × 4)
+resizeAndPrint(new Square(2));       // 16 ✗  — last setter forced both sides to 4
 ```
 
-Substituting `Square` where `Rectangle` is expected produces unexpected results. The LSP is violated.
+Walk through the Square call:
+
+1. `setWidth(5)` — Square keeps sides equal, so it becomes **5 × 5**.
+2. `setHeight(4)` — Square keeps sides equal again, so it becomes **4 × 4**.
+3. `area()` is **16**, not the **20** the function expected (`5 × 4`).
+
+The function treated `rect` as a Rectangle: change width, then height, independently. A Square cannot keep that promise, so substituting `Square` for `Rectangle` breaks the caller. That is the LSP violation.
 
 ### Why This Happens
 
-A square **is-a** rectangle mathematically. But in terms of behavior — specifically having independently settable width and height — a `Square` does **not** satisfy the `Rectangle` contract.
+A square **is-a** rectangle in math. In this API it is not: a Rectangle lets width and height change separately. A Square cannot.
 
-LSP is about **behavioral** substitutability, not just type compatibility.
+LSP is about **behavior**, not the English word “is-a.” Before you extend a class, ask:
+
+1. What does the parent **guarantee**? (Here: width and height can change separately.)
+2. Does the child still keep that guarantee? (Square: no.)
+3. If no — do not extend that parent. Share a smaller type (`Shape` with `area()`), or keep them separate.
 
 ### The Solution
 
