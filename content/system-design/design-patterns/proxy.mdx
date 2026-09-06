@@ -1,0 +1,598 @@
+---
+title: "Proxy Pattern"
+description: "Provide a surrogate or placeholder for another object to control access to it."
+difficulty: "beginner"
+readingTime: "11 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["structural", "proxy", "beginner", "high-priority", "interview-important"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["decorator", "adapter"]
+summary: "Proxy pattern provides a substitute for another object, controlling access, adding behavior, or delaying expensive operations."
+interviewQuestions:
+  - "What is the Proxy pattern?"
+  - "What are the types of proxies?"
+  - "What's the difference between Proxy and Decorator?"
+  - "When would you use a Proxy?"
+  - "Give a real-world example of Proxy."
+---
+
+## Pattern Information
+
+**Category:** Structural  
+**Difficulty:** 🟢 Beginner  
+**Priority:** High  
+**Commonly Used:** Yes  
+**Relevant To:** Backend, Frontend, JavaScript, TypeScript, APIs, Caching
+
+---
+
+## What Is Proxy?
+
+Proxy pattern provides a **substitute** or **placeholder** for another object. The proxy controls access to the original object.
+
+Think of it as a **gatekeeper** that sits between the client and the real object.
+
+<Callout type="definition">
+  **Proxy** = A substitute that controls access to the real object.
+</Callout>
+
+---
+
+## Why Does This Pattern Exist?
+
+Loading a large image takes time:
+
+```ts
+class HighResImage {
+  constructor(filename: string) {
+    this.load(filename); // Loads immediately (slow!)
+  }
+  
+  load(filename: string): void {
+    console.log(`Loading ${filename} (5MB)...`);
+    // Expensive operation
+  }
+  
+  display(): void {
+    console.log("Displaying image");
+  }
+}
+
+// Creates 100 images immediately ❌
+const images = [
+  new HighResImage('img1.jpg'),
+  new HighResImage('img2.jpg'),
+  // ... 98 more
+];
+```
+
+This loads all 100 images even if the user never views them.
+
+**With Proxy:**
+
+```ts
+const images = [
+  new ImageProxy('img1.jpg'),
+  new ImageProxy('img2.jpg'),
+  // ... 98 more
+];
+
+// Only loads when needed
+images[0].display(); // Loads NOW
+```
+
+The Proxy delays loading until necessary.
+
+---
+
+## The Problem
+
+```ts
+class Database {
+  query(sql: string): any[] {
+    console.log(`Executing: ${sql}`);
+    // Expensive database call
+    return [];
+  }
+}
+
+// Every call hits the database
+const db = new Database();
+db.query("SELECT * FROM users"); // Database call
+db.query("SELECT * FROM users"); // Same query, another call ❌
+```
+
+**Problems:**
+
+- No caching
+- No access control
+- No lazy loading
+- No logging
+
+---
+
+## What Is Wrong With This Approach?
+
+- **Performance** — expensive operations repeated
+- **No protection** — anyone can access the object
+- **No optimization** — no caching or lazy loading
+
+---
+
+## The Idea Behind the Pattern
+
+Create a **Proxy** that:
+
+1. Implements the same interface as the real object
+2. Holds a reference to the real object
+3. Controls access (lazy loading, caching, access control, logging)
+4. Forwards requests to the real object when appropriate
+
+---
+
+## Types of Proxies
+
+### 1. **Virtual Proxy** — Lazy Loading
+
+Delays creation of expensive objects until needed.
+
+### 2. **Protection Proxy** — Access Control
+
+Controls who can access the object.
+
+### 3. **Caching Proxy** — Performance
+
+Caches results to avoid repeated expensive calls.
+
+### 4. **Logging Proxy** — Monitoring
+
+Logs all operations.
+
+---
+
+## Structure
+
+```text
+    Client
+       │
+       │ uses
+       ▼
+   Interface ◄───────── both implement
+       △
+       │
+   ┌───┴───┐
+   │       │
+ Proxy  RealSubject
+   │
+   └──────► holds reference to
+```
+
+---
+
+## Simple Real-World Analogy
+
+A **credit card** is a proxy for your bank account.
+
+- You don't carry cash everywhere (real object)
+- The card **represents** your account (proxy)
+- The card **controls access** (PIN, limits)
+- Transactions are **logged**
+
+---
+
+## TypeScript Example
+
+### Virtual Proxy (Lazy Loading)
+
+```ts
+interface Image {
+  display(): void;
+}
+
+class RealImage implements Image {
+  private filename: string;
+
+  constructor(filename: string) {
+    this.filename = filename;
+    this.loadFromDisk();
+  }
+
+  private loadFromDisk(): void {
+    console.log(`Loading ${this.filename}`);
+  }
+
+  display(): void {
+    console.log(`Displaying ${this.filename}`);
+  }
+}
+
+class ImageProxy implements Image {
+  private filename: string;
+  private realImage?: RealImage;
+
+  constructor(filename: string) {
+    this.filename = filename;
+  }
+
+  display(): void {
+    // Lazy loading — only create when needed
+    if (!this.realImage) {
+      this.realImage = new RealImage(this.filename);
+    }
+    this.realImage.display();
+  }
+}
+
+// Usage
+const image = new ImageProxy('photo.jpg');
+console.log('Proxy created');
+// ... later
+image.display(); // NOW it loads
+```
+
+---
+
+### Protection Proxy (Access Control)
+
+```ts
+interface BankAccount {
+  withdraw(amount: number): void;
+}
+
+class RealBankAccount implements BankAccount {
+  private balance = 1000;
+
+  withdraw(amount: number): void {
+    this.balance -= amount;
+    console.log(`Withdrew $${amount}. Balance: $${this.balance}`);
+  }
+}
+
+class BankAccountProxy implements BankAccount {
+  private realAccount: RealBankAccount;
+  private userRole: string;
+
+  constructor(userRole: string) {
+    this.realAccount = new RealBankAccount();
+    this.userRole = userRole;
+  }
+
+  withdraw(amount: number): void {
+    if (this.userRole !== 'owner') {
+      console.log('Access denied. Only owner can withdraw.');
+      return;
+    }
+    
+    if (amount > 500) {
+      console.log('Daily limit exceeded');
+      return;
+    }
+    
+    this.realAccount.withdraw(amount);
+  }
+}
+
+// Usage
+const ownerAccount = new BankAccountProxy('owner');
+ownerAccount.withdraw(200); // Allowed
+
+const guestAccount = new BankAccountProxy('guest');
+guestAccount.withdraw(100); // Denied
+```
+
+---
+
+### Caching Proxy
+
+```ts
+interface API {
+  fetchUser(id: number): Promise<User>;
+}
+
+class RealAPI implements API {
+  async fetchUser(id: number): Promise<User> {
+    console.log(`Fetching user ${id} from API...`);
+    // Simulate API call
+    return { id, name: `User ${id}` };
+  }
+}
+
+class CachingAPIProxy implements API {
+  private realAPI: RealAPI;
+  private cache: Map<number, User>;
+
+  constructor() {
+    this.realAPI = new RealAPI();
+    this.cache = new Map();
+  }
+
+  async fetchUser(id: number): Promise<User> {
+    if (this.cache.has(id)) {
+      console.log(`Returning cached user ${id}`);
+      return this.cache.get(id)!;
+    }
+    
+    const user = await this.realAPI.fetchUser(id);
+    this.cache.set(id, user);
+    return user;
+  }
+}
+
+// Usage
+const api = new CachingAPIProxy();
+await api.fetchUser(1); // Fetches from API
+await api.fetchUser(1); // Returns from cache ✅
+```
+
+---
+
+## JavaScript ES6 Proxy
+
+JavaScript has built-in `Proxy`:
+
+```js
+const target = {
+  name: 'Alice',
+  age: 25,
+};
+
+const handler = {
+  get(target, prop) {
+    console.log(`Getting ${prop}`);
+    return target[prop];
+  },
+  
+  set(target, prop, value) {
+    console.log(`Setting ${prop} to ${value}`);
+    if (prop === 'age' && value < 0) {
+      throw new Error('Age cannot be negative');
+    }
+    target[prop] = value;
+    return true;
+  },
+};
+
+const proxy = new Proxy(target, handler);
+
+console.log(proxy.name); // Getting name \n Alice
+proxy.age = 30;          // Setting age to 30
+```
+
+---
+
+## How the Pattern Solves the Problem
+
+| Before (Direct Access) | After (Proxy) |
+|---|---|
+| No lazy loading | Virtual proxy delays creation |
+| No access control | Protection proxy enforces rules |
+| No caching | Caching proxy stores results |
+| No logging | Logging proxy tracks calls |
+
+---
+
+## Advantages
+
+✅ **Lazy loading** — delays expensive operations  
+✅ **Access control** — protects the real object  
+✅ **Caching** — improves performance  
+✅ **Logging** — monitors operations  
+✅ **Open/Closed** — add proxies without changing real object
+
+---
+
+## Disadvantages
+
+⚠️ **Indirection** — adds a layer  
+⚠️ **Complexity** — more objects  
+⚠️ **Performance** — slight overhead
+
+---
+
+## When Should I Use It?
+
+Use Proxy when:
+
+✅ You need to **control access** to an object  
+✅ You want **lazy loading**  
+✅ You need **caching**  
+✅ You want **logging** or **monitoring**
+
+**Common use cases:**
+
+- **Lazy loading** images, videos
+- **Access control** (authentication, permissions)
+- **Caching** API responses
+- **Logging** database queries
+- **Virtual objects** (database connections)
+
+---
+
+## When Should I NOT Use It?
+
+Avoid Proxy when:
+
+❌ Direct access is sufficient  
+❌ The overhead isn't justified  
+
+---
+
+## Real-World Examples
+
+### 1. HTTP Proxy with Caching
+
+```ts
+class HTTPClient {
+  async get(url: string): Promise<string> {
+    console.log(`Fetching ${url}`);
+    const response = await fetch(url);
+    return response.text();
+  }
+}
+
+class CachingHTTPProxy {
+  private client: HTTPClient;
+  private cache: Map<string, string>;
+
+  constructor() {
+    this.client = new HTTPClient();
+    this.cache = new Map();
+  }
+
+  async get(url: string): Promise<string> {
+    if (this.cache.has(url)) {
+      console.log(`Cache hit: ${url}`);
+      return this.cache.get(url)!;
+    }
+    
+    const result = await this.client.get(url);
+    this.cache.set(url, result);
+    return result;
+  }
+}
+```
+
+---
+
+### 2. Database Connection Proxy
+
+```ts
+class DatabaseConnection {
+  connect(): void {
+    console.log('Connected to database');
+  }
+  
+  query(sql: string): any[] {
+    console.log(`Executing: ${sql}`);
+    return [];
+  }
+}
+
+class LazyDatabaseProxy {
+  private connection?: DatabaseConnection;
+
+  query(sql: string): any[] {
+    if (!this.connection) {
+      console.log('Creating connection...');
+      this.connection = new DatabaseConnection();
+      this.connection.connect();
+    }
+    return this.connection.query(sql);
+  }
+}
+
+// Usage
+const db = new LazyDatabaseProxy();
+// No connection yet
+db.query('SELECT *'); // NOW it connects
+```
+
+---
+
+## Common Mistakes
+
+### Mistake 1: Proxy Adds Business Logic
+
+```ts
+// ❌ Proxy should not add business logic
+class UserProxy {
+  save(user: User) {
+    user.validate(); // ❌ Business logic
+    this.realUser.save(user);
+  }
+}
+
+// ✅ Proxy only controls access
+class UserProxy {
+  save(user: User) {
+    if (!this.hasPermission()) {
+      throw new Error('Access denied');
+    }
+    this.realUser.save(user);
+  }
+}
+```
+
+---
+
+## Common Misconceptions
+
+### "Proxy and Decorator are the same"
+
+No.
+
+- **Proxy** controls access (protection, lazy loading)
+- **Decorator** adds behavior (wraps and enhances)
+
+### "Proxy always improves performance"
+
+No. Proxy adds overhead. It improves performance only when it prevents expensive operations (caching, lazy loading).
+
+---
+
+## Related SOLID Principles
+
+### Single Responsibility Principle (SRP)
+
+✅ Proxy handles access control, real object handles business logic.
+
+### Open/Closed Principle (OCP)
+
+✅ Add proxies without modifying the real object.
+
+---
+
+## Related Design Patterns
+
+### Decorator
+
+**Difference:** Decorator adds behavior. Proxy controls access.
+
+### Adapter
+
+**Difference:** Adapter changes interface. Proxy keeps same interface.
+
+---
+
+## Interview Questions
+
+**Q1: What is the Proxy pattern?**  
+A: A structural pattern that provides a substitute for another object to control access to it.
+
+**Q2: What are the types of proxies?**  
+A: Virtual (lazy loading), Protection (access control), Caching (performance), Logging (monitoring).
+
+**Q3: What's the difference between Proxy and Decorator?**  
+A: Proxy controls access. Decorator adds behavior.
+
+**Q4: When would you use a Proxy?**  
+A: When you need lazy loading, access control, caching, or logging.
+
+**Q5: Give a real-world example.**  
+A: A credit card (proxy for bank account), lazy-loading images, or caching API responses.
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "Proxy is a structural pattern that provides a substitute for another object to control access. It implements the same interface as the real object and forwards requests to it. Common types include virtual proxies for lazy loading, protection proxies for access control, and caching proxies for performance. Unlike Decorator which adds behavior, Proxy focuses on controlling access. Examples include lazy-loading images, caching API calls, and enforcing authentication checks."
+
+---
+
+## Quick Revision
+
+- Proxy **controls access** to real object
+- **Same interface** as real object
+- Types: **Virtual, Protection, Caching, Logging**
+- **Lazy loading** — delays creation
+- **Access control** — enforces rules
+- **Caching** — stores results
+- Different from **Decorator** (adds behavior)
+- Common in: **APIs, images, databases**
+
+---
+
+## One-Line Memory Trick
+
+**"Proxy is like a credit card — controls access to your bank account."**

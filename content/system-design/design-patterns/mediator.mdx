@@ -1,0 +1,70 @@
+---
+title: "Mediator Pattern"
+description: "Define an object that encapsulates how a set of objects interact. Mediator promotes loose coupling by keeping objects from referring to each other explicitly."
+difficulty: "intermediate"
+readingTime: "11 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["behavioral", "mediator", "intermediate"]
+prerequisites: ["oop"]
+relatedTopics: ["observer", "facade"]
+summary: "Mediator centralizes complex communications between objects through a mediator object."
+---
+
+## Pattern Information
+
+**Category:** Behavioral  
+**Difficulty:** 🟡 Intermediate  
+
+---
+
+## What Is Mediator?
+
+Mediator centralizes communication between objects. Instead of objects talking directly, they communicate through a **mediator**.
+
+<Callout type="definition">
+  **Mediator** = Centralize complex communication through a mediator.
+</Callout>
+
+---
+
+## TypeScript Example
+
+```ts
+class ChatRoom {
+  showMessage(user: User, message: string) {
+    console.log(\`[\${user.name}]: \${message}\`);
+  }
+}
+
+class User {
+  constructor(public name: string, private chatRoom: ChatRoom) {}
+  
+  send(message: string) {
+    this.chatRoom.showMessage(this, message);
+  }
+}
+
+// Usage
+const chatRoom = new ChatRoom();
+const user1 = new User('Alice', chatRoom);
+const user2 = new User('Bob', chatRoom);
+
+user1.send('Hi Bob!');
+user2.send('Hi Alice!');
+```
+
+---
+
+## When to Use
+
+✅ Objects communicate in complex ways  
+✅ You want to reduce coupling  
+
+**Common:** Chat rooms, air traffic control, UI form validation.
+
+---
+
+## One-Line Memory Trick
+
+**"Mediator is like an air traffic controller — all planes communicate through the controller, not directly."**

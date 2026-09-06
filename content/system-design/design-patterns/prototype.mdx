@@ -1,0 +1,59 @@
+---
+title: "Prototype Pattern"
+description: "Specify the kinds of objects to create using a prototypical instance, and create new objects by copying this prototype."
+difficulty: "beginner"
+readingTime: "10 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["creational", "prototype", "beginner"]
+prerequisites: ["oop"]
+relatedTopics: ["factory-method"]
+summary: "Prototype creates objects by cloning an existing object (prototype) rather than creating from scratch."
+---
+
+## Pattern Information
+
+**Category:** Creational  
+**Difficulty:** 🟢 Beginner  
+
+---
+
+## What Is Prototype?
+
+Prototype creates objects by **cloning** an existing object rather than using constructors.
+
+<Callout type="definition">
+  **Prototype** = Clone existing objects instead of creating from scratch.
+</Callout>
+
+---
+
+## JavaScript Example
+
+```js
+const carPrototype = {
+  wheels: 4,
+  engine: 'V8',
+  clone() {
+    return Object.create(this);
+  }
+};
+
+const car1 = carPrototype.clone();
+const car2 = carPrototype.clone();
+```
+
+---
+
+## When to Use
+
+✅ Creating objects is expensive  
+✅ Objects have many shared properties  
+
+**Common:** JavaScript prototypal inheritance, object cloning.
+
+---
+
+## One-Line Memory Trick
+
+**"Prototype is like using a template — copy instead of creating from scratch."**

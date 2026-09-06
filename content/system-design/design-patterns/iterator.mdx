@@ -1,0 +1,80 @@
+---
+title: "Iterator Pattern"
+description: "Provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation."
+difficulty: "beginner"
+readingTime: "10 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["behavioral", "iterator", "beginner"]
+prerequisites: ["oop"]
+relatedTopics: ["composite"]
+summary: "Iterator provides sequential access to elements without exposing the underlying structure."
+---
+
+## Pattern Information
+
+**Category:** Behavioral  
+**Difficulty:** 🟢 Beginner  
+
+---
+
+## What Is Iterator?
+
+Iterator provides a way to **access elements sequentially** without exposing the collection's internal structure.
+
+<Callout type="definition">
+  **Iterator** = Traverse collections without exposing structure.
+</Callout>
+
+---
+
+## JavaScript Example
+
+```js
+class BookCollection {
+  constructor() {
+    this.books = [];
+  }
+  
+  addBook(book) {
+    this.books.push(book);
+  }
+  
+  [Symbol.iterator]() {
+    let index = 0;
+    const books = this.books;
+    
+    return {
+      next() {
+        if (index < books.length) {
+          return { value: books[index++], done: false };
+        }
+        return { done: true };
+      }
+    };
+  }
+}
+
+const collection = new BookCollection();
+collection.addBook('Book 1');
+collection.addBook('Book 2');
+
+for (const book of collection) {
+  console.log(book);
+}
+```
+
+---
+
+## When to Use
+
+✅ You want to traverse a collection without exposing its structure  
+✅ You need multiple traversal algorithms  
+
+**Common:** Built into JavaScript (for...of, arrays), custom collections.
+
+---
+
+## One-Line Memory Trick
+
+**"Iterator is like a playlist — go through songs one by one without knowing the internal list structure."**

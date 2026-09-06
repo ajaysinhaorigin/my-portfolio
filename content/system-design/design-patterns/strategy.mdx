@@ -1,0 +1,655 @@
+---
+title: "Strategy Pattern"
+description: "Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it."
+difficulty: "beginner"
+readingTime: "13 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["behavioral", "strategy", "beginner", "high-priority", "interview-important", "ocp"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["factory-method", "state", "command"]
+summary: "Strategy pattern lets you swap algorithms at runtime. Instead of hard-coding behavior with if/else, you define interchangeable strategies that can be changed dynamically."
+interviewQuestions:
+  - "What is the Strategy pattern?"
+  - "When would you use Strategy instead of if/else statements?"
+  - "How does Strategy follow the Open/Closed Principle?"
+  - "What is the difference between Strategy and State pattern?"
+  - "Give a real-world example of Strategy pattern."
+---
+
+## Pattern Information
+
+**Category:** Behavioral  
+**Difficulty:** 🟢 Beginner  
+**Priority:** High  
+**Commonly Used:** Yes  
+**Relevant To:** Backend, Frontend, JavaScript, TypeScript, Node.js, React
+
+---
+
+## What Is Strategy?
+
+The Strategy pattern defines a family of algorithms, encapsulates each one in a separate class, and makes them interchangeable.
+
+Instead of having multiple `if/else` or `switch` statements inside a class, you extract each algorithm into its own strategy class. The client can then choose which strategy to use at runtime.
+
+<Callout type="definition">
+  **Strategy** = Swap algorithms dynamically by changing the strategy object.
+</Callout>
+
+---
+
+## Why Does This Pattern Exist?
+
+You are building an e-commerce app. You need to calculate shipping costs.
+
+```js
+class ShippingCalculator {
+  calculate(order, shippingType) {
+    if (shippingType === "standard") {
+      return order.weight * 1.5;
+    } else if (shippingType === "express") {
+      return order.weight * 3.0 + 10;
+    } else if (shippingType === "overnight") {
+      return order.weight * 5.0 + 25;
+    }
+  }
+}
+```
+
+This works. But now the business adds:
+
+- International shipping
+- Drone delivery
+- Same-day delivery
+
+Your method becomes:
+
+```js
+calculate(order, shippingType) {
+  if (shippingType === "standard") { /*...*/ }
+  else if (shippingType === "express") { /*...*/ }
+  else if (shippingType === "overnight") { /*...*/ }
+  else if (shippingType === "international") { /*...*/ }
+  else if (shippingType === "drone") { /*...*/ }
+  else if (shippingType === "sameday") { /*...*/ }
+  // More coming...
+}
+```
+
+**Problems:**
+
+- Adding a new shipping method means editing this function.
+- The function has too many responsibilities.
+- Violates the Open/Closed Principle.
+- Hard to test each algorithm independently.
+
+Strategy pattern solves this.
+
+---
+
+## The Problem
+
+```js
+class Compressor {
+  compress(file, format) {
+    if (format === "zip") {
+      // ZIP compression logic
+    } else if (format === "rar") {
+      // RAR compression logic
+    } else if (format === "tar") {
+      // TAR compression logic
+    }
+  }
+}
+```
+
+**Problems:**
+
+1. **Rigid** — adding a new format means editing this class.
+2. **Bloated** — the class grows with every format.
+3. **Untestable** — testing one format requires having all formats present.
+4. **Coupled** — the class knows about every compression algorithm.
+
+---
+
+## What Is Wrong With This Approach?
+
+- Every new algorithm means modifying existing code.
+- The class violates the Single Responsibility Principle (too many algorithms in one class).
+- Testing is difficult — you must set up all algorithms to test one.
+- Cannot swap algorithms at runtime easily.
+
+---
+
+## The Idea Behind the Pattern
+
+What if each algorithm was a separate class?
+
+The main class (the **context**) would have a reference to a **strategy** object. It does not know which strategy it has — it just calls a method on it.
+
+You can swap strategies at runtime by changing which strategy object the context uses.
+
+This way:
+
+- Each algorithm is isolated.
+- Adding a new algorithm means creating a new strategy class.
+- The context class never changes.
+
+---
+
+## How Does It Work?
+
+### Step-by-Step
+
+1. Define a **Strategy interface** — all strategies implement this.
+2. Create **Concrete Strategy classes** — each implements a different algorithm.
+3. The **Context class** holds a reference to a strategy.
+4. The context delegates work to the strategy.
+5. At runtime, you can change the strategy.
+
+---
+
+## Structure
+
+```text
+        Client
+           │
+           │ uses
+           ▼
+      ┌─────────┐
+      │ Context │
+      ├─────────┤
+      │ strategy│───────┐
+      │         │       │ references
+      │ execute()│      │
+      └─────────┘       │
+                        ▼
+                  ┌───────────┐
+                  │ Strategy  │  (interface)
+                  ├───────────┤
+                  │ + execute()│
+                  └───────────┘
+                        △
+                        │ implements
+        ┌───────────────┼───────────────┐
+        │               │               │
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│ ConcreteA    │ │ ConcreteB    │ │ ConcreteC    │
+├──────────────┤ ├──────────────┤ ├──────────────┤
+│ + execute()  │ │ + execute()  │ │ + execute()  │
+└──────────────┘ └──────────────┘ └──────────────┘
+```
+
+**Key parts:**
+
+- **Strategy** — the interface all algorithms implement
+- **Concrete Strategies** — specific implementations of the algorithm
+- **Context** — holds a strategy and delegates work to it
+
+---
+
+## Simple Real-World Analogy
+
+Think of a **GPS navigation app**.
+
+You enter your destination. The app can calculate the route using different strategies:
+
+- **Fastest route** (highway)
+- **Shortest distance** (back roads)
+- **Avoid tolls**
+- **Scenic route**
+
+You choose the strategy. The app does not have one giant `if/else` for every route type. Each strategy is a separate algorithm.
+
+Another analogy: **payment methods** at checkout. You can pay with:
+
+- Credit card
+- PayPal
+- Apple Pay
+- Crypto
+
+Same action (pay), different strategies.
+
+---
+
+## TypeScript Example
+
+### Step 1: Define the Strategy Interface
+
+```ts
+interface ShippingStrategy {
+  calculate(order: { weight: number; distance: number }): number;
+}
+```
+
+### Step 2: Create Concrete Strategies
+
+```ts
+class StandardShipping implements ShippingStrategy {
+  calculate(order: { weight: number; distance: number }): number {
+    return order.weight * 1.5;
+  }
+}
+
+class ExpressShipping implements ShippingStrategy {
+  calculate(order: { weight: number; distance: number }): number {
+    return order.weight * 3.0 + 10;
+  }
+}
+
+class OvernightShipping implements ShippingStrategy {
+  calculate(order: { weight: number; distance: number }): number {
+    return order.weight * 5.0 + 25;
+  }
+}
+```
+
+### Step 3: Create the Context
+
+```ts
+class ShippingCalculator {
+  private strategy: ShippingStrategy;
+
+  constructor(strategy: ShippingStrategy) {
+    this.strategy = strategy;
+  }
+
+  // Allow changing strategy at runtime
+  setStrategy(strategy: ShippingStrategy) {
+    this.strategy = strategy;
+  }
+
+  calculate(order: { weight: number; distance: number }): number {
+    return this.strategy.calculate(order);
+  }
+}
+```
+
+### Step 4: Use the Strategy
+
+```ts
+const order = { weight: 10, distance: 100 };
+
+// Use standard shipping
+const calculator = new ShippingCalculator(new StandardShipping());
+console.log(calculator.calculate(order)); // 15
+
+// Switch to express at runtime
+calculator.setStrategy(new ExpressShipping());
+console.log(calculator.calculate(order)); // 40
+
+// Switch to overnight
+calculator.setStrategy(new OvernightShipping());
+console.log(calculator.calculate(order)); // 75
+```
+
+**What happened:**
+
+- The `ShippingCalculator` does not have `if/else` statements.
+- Each strategy is isolated in its own class.
+- You can change strategies dynamically.
+- Adding a new shipping method (e.g., Drone) means creating a new strategy class — no existing code changes.
+
+---
+
+## Simpler JavaScript Version
+
+You do not need classes and interfaces. Functions work too:
+
+```js
+// Strategies as functions
+const standardShipping = (order) => order.weight * 1.5;
+const expressShipping = (order) => order.weight * 3.0 + 10;
+const overnightShipping = (order) => order.weight * 5.0 + 25;
+
+// Context
+class ShippingCalculator {
+  constructor(strategy) {
+    this.strategy = strategy;
+  }
+
+  calculate(order) {
+    return this.strategy(order);
+  }
+}
+
+// Usage
+const order = { weight: 10, distance: 100 };
+const calculator = new ShippingCalculator(standardShipping);
+console.log(calculator.calculate(order)); // 15
+
+calculator.strategy = expressShipping;
+console.log(calculator.calculate(order)); // 40
+```
+
+<Callout type="tip">
+  In JavaScript, strategies can be simple functions. You do not always need classes.
+</Callout>
+
+---
+
+## How the Pattern Solves the Problem
+
+| Before (if/else) | After (Strategy) |
+|---|---|
+| One giant method with many conditionals | Separate strategy classes |
+| Adding algorithms means editing existing code | Adding algorithms means creating new classes |
+| Hard to test each algorithm | Each strategy is independently testable |
+| Violates Open/Closed Principle | Follows Open/Closed Principle |
+
+---
+
+## Advantages
+
+✅ **Open/Closed Principle** — add new strategies without modifying existing code  
+✅ **Single Responsibility** — each strategy has one job  
+✅ **Testability** — test each strategy in isolation  
+✅ **Runtime flexibility** — swap strategies dynamically  
+✅ **Eliminates conditionals** — no more giant `if/else` or `switch`
+
+---
+
+## Disadvantages
+
+⚠️ **More classes** — each strategy is a separate class  
+⚠️ **Overhead for simple cases** — if you only have 2-3 strategies, `if/else` may be simpler  
+⚠️ **Client must know strategies** — the client needs to understand which strategy to use
+
+---
+
+## When Should I Use It?
+
+Use Strategy when:
+
+✅ You have multiple algorithms for the same task  
+✅ You want to avoid large `if/else` or `switch` statements  
+✅ You want to swap algorithms at runtime  
+✅ You want to follow the Open/Closed Principle  
+
+**Common use cases:**
+
+- **Payment methods** (Credit Card, PayPal, Crypto)
+- **Sorting algorithms** (Quick Sort, Merge Sort, Bubble Sort)
+- **Compression formats** (ZIP, RAR, TAR)
+- **Route calculation** (Fastest, Shortest, Scenic)
+- **Validation rules** (Email, Phone, Credit Card)
+
+---
+
+## When Should I NOT Use It?
+
+Avoid Strategy when:
+
+❌ You have only one or two algorithms — `if/else` is simpler  
+❌ The algorithms never change  
+❌ The logic is trivial  
+
+```js
+// ❌ Overengineered for one condition
+if (user.isPremium) {
+  applyDiscount(10);
+} else {
+  applyDiscount(0);
+}
+
+// No need for Strategy here
+```
+
+---
+
+## Real-World Examples
+
+### 1. Payment Processing
+
+```ts
+interface PaymentStrategy {
+  pay(amount: number): void;
+}
+
+class CreditCardPayment implements PaymentStrategy {
+  pay(amount: number) {
+    console.log(`Paid $${amount} via Credit Card`);
+  }
+}
+
+class PayPalPayment implements PaymentStrategy {
+  pay(amount: number) {
+    console.log(`Paid $${amount} via PayPal`);
+  }
+}
+
+class CryptoPayment implements PaymentStrategy {
+  pay(amount: number) {
+    console.log(`Paid $${amount} via Cryptocurrency`);
+  }
+}
+
+class PaymentProcessor {
+  private strategy: PaymentStrategy;
+
+  constructor(strategy: PaymentStrategy) {
+    this.strategy = strategy;
+  }
+
+  processPayment(amount: number) {
+    this.strategy.pay(amount);
+  }
+}
+
+// Usage
+const processor = new PaymentProcessor(new PayPalPayment());
+processor.processPayment(100); // Paid $100 via PayPal
+```
+
+---
+
+### 2. Discount Calculation
+
+```ts
+interface DiscountStrategy {
+  apply(price: number): number;
+}
+
+class NoDiscount implements DiscountStrategy {
+  apply(price: number) {
+    return price;
+  }
+}
+
+class PercentageDiscount implements DiscountStrategy {
+  constructor(private percent: number) {}
+
+  apply(price: number) {
+    return price * (1 - this.percent / 100);
+  }
+}
+
+class FixedDiscount implements DiscountStrategy {
+  constructor(private amount: number) {}
+
+  apply(price: number) {
+    return Math.max(0, price - this.amount);
+  }
+}
+
+class PricingEngine {
+  private strategy: DiscountStrategy = new NoDiscount();
+
+  setDiscountStrategy(strategy: DiscountStrategy) {
+    this.strategy = strategy;
+  }
+
+  calculatePrice(basePrice: number): number {
+    return this.strategy.apply(basePrice);
+  }
+}
+
+// Usage
+const pricing = new PricingEngine();
+console.log(pricing.calculatePrice(100)); // 100
+
+pricing.setDiscountStrategy(new PercentageDiscount(20));
+console.log(pricing.calculatePrice(100)); // 80
+
+pricing.setDiscountStrategy(new FixedDiscount(15));
+console.log(pricing.calculatePrice(100)); // 85
+```
+
+---
+
+### 3. Sorting (JavaScript Example with Functions)
+
+```js
+const bubbleSort = (arr) => {
+  // Bubble sort implementation
+  return arr.sort((a, b) => a - b);
+};
+
+const quickSort = (arr) => {
+  // Quick sort implementation
+  return arr.sort((a, b) => a - b);
+};
+
+class Sorter {
+  constructor(strategy) {
+    this.strategy = strategy;
+  }
+
+  sort(data) {
+    return this.strategy(data);
+  }
+}
+
+// Usage
+const data = [5, 2, 9, 1, 5, 6];
+const sorter = new Sorter(quickSort);
+console.log(sorter.sort(data));
+```
+
+---
+
+## Common Mistakes
+
+### Mistake 1: Using Strategy for every conditional
+
+```js
+// ❌ Overkill
+if (age >= 18) {
+  return "Adult";
+} else {
+  return "Minor";
+}
+
+// No need for Strategy here
+```
+
+**Rule:** Use Strategy when you have **multiple complex algorithms**, not for simple conditions.
+
+---
+
+### Mistake 2: Not making strategies interchangeable
+
+```js
+// ❌ These are not interchangeable
+class EmailNotification {
+  send(user) { /* send email */ }
+}
+
+class SmsNotification {
+  send(phoneNumber) { /* send SMS */ } // Different signature!
+}
+```
+
+**Fix:** All strategies must implement the same interface.
+
+---
+
+## Common Misconceptions
+
+### "Strategy and Factory Method are the same"
+
+No. Factory Method **creates objects**. Strategy **selects behavior**.
+
+### "Strategy is just polymorphism"
+
+Essentially, yes. But the pattern gives a **name** and **structure** to this approach, making it easier to communicate and recognize.
+
+---
+
+## Related SOLID Principles
+
+### Open/Closed Principle (OCP)
+
+✅ **Strategy is a direct application of OCP.**
+
+- Open for extension: add new strategies.
+- Closed for modification: the context class never changes.
+
+### Single Responsibility Principle (SRP)
+
+✅ Each strategy has **one responsibility** — one algorithm.
+
+---
+
+## Related Design Patterns
+
+### State
+
+**Difference:** Strategy swaps **algorithms**. State swaps **behavior based on internal state**.
+
+**When to use:** Use Strategy when the client chooses the algorithm. Use State when the object's behavior changes based on its internal state.
+
+### Command
+
+**Difference:** Command encapsulates **actions** (requests). Strategy encapsulates **algorithms**.
+
+### Factory Method
+
+Both decouple code from concrete implementations. Factory Method creates objects; Strategy selects behavior.
+
+---
+
+## Interview Questions
+
+**Q1: What is the Strategy pattern?**  
+A: A behavioral pattern that defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime.
+
+**Q2: When would you use Strategy instead of if/else?**  
+A: When you have multiple algorithms that may change or grow, and you want to avoid a large conditional block. Strategy makes the code flexible and follows the Open/Closed Principle.
+
+**Q3: How does Strategy follow OCP?**  
+A: You can add new strategies without modifying existing code. The context class remains unchanged.
+
+**Q4: What is the difference between Strategy and State?**  
+A: Strategy lets the client choose the algorithm. State changes behavior based on the object's internal state.
+
+**Q5: Give a real-world example.**  
+A: A payment system where users can choose different payment methods (Credit Card, PayPal, Crypto) at checkout.
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "Strategy is a behavioral pattern where you define a family of algorithms, encapsulate each one in a separate class, and make them interchangeable. Instead of using if/else or switch statements, you extract each algorithm into a strategy class. The client can then swap strategies at runtime. This follows the Open/Closed Principle and makes code flexible, testable, and easy to extend. Common examples include payment methods, shipping calculators, and sorting algorithms."
+
+---
+
+## Quick Revision
+
+- Strategy **encapsulates algorithms** in separate classes.
+- Context holds a reference to a strategy and delegates work to it.
+- Strategies are **interchangeable** at runtime.
+- **Eliminates** large `if/else` or `switch` statements.
+- Follows the **Open/Closed Principle**.
+- Each strategy is **independently testable**.
+- Common in: **payments, discounts, sorting, compression, routing**.
+- In JavaScript, strategies can be **simple functions**.
+- Use when: multiple algorithms, runtime flexibility needed.
+- Avoid when: only 1-2 simple conditions.
+
+---
+
+## One-Line Memory Trick
+
+**"Strategy is like choosing a payment method at checkout — same action (pay), different strategies (card, PayPal, crypto)."**

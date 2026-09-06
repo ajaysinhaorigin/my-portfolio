@@ -1,0 +1,327 @@
+---
+title: "Introduction to Design Patterns"
+description: "What are design patterns, why do they exist, and when should you use them? A concise introduction to software design patterns."
+difficulty: "beginner"
+readingTime: "8 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["design-patterns", "software-design", "introduction", "beginner"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["oop", "solid-principles"]
+summary: "Design patterns are proven solutions to common software design problems. They are not code you copy — they are concepts you apply when the problem fits."
+interviewQuestions:
+  - "What is a design pattern?"
+  - "Why do we need design patterns?"
+  - "Should you always use design patterns?"
+  - "What are the three main categories of design patterns?"
+---
+
+## What Is a Design Pattern?
+
+After decades of software development, experienced engineers noticed something:
+
+**The same design problems appear over and over. And the same solutions work over and over.**
+
+A design pattern is:
+
+> A proven, reusable solution to a common software design problem.
+
+<Callout type="definition">
+  A pattern is a **concept** you understand and apply — not code you copy-paste.
+</Callout>
+
+---
+
+## What Patterns Are NOT
+
+❌ **Not libraries** — Libraries are code you import (`axios`, `lodash`). Patterns are ideas you implement.
+
+❌ **Not frameworks** — Frameworks are structures you plug into (React, NestJS). Patterns are techniques you use inside your code.
+
+❌ **Not algorithms** — Algorithms solve computational problems (sorting, searching). Patterns solve design problems (coupling, rigidity, complexity).
+
+❌ **Not rules** — You don't have to use patterns everywhere. Sometimes simple code is better.
+
+✅ **Patterns are tools** — Use them when they solve a real problem.
+
+---
+
+## Why Do Design Patterns Exist?
+
+### 1. Real Problems Appear Repeatedly
+
+As software grows, the same issues appear:
+
+| Problem | What happens |
+|---|---|
+| **Tight coupling** | Changing one class breaks three others |
+| **Rigid code** | Adding features means editing existing code |
+| **God objects** | One class does everything |
+| **Repeated logic** | Same code copy-pasted everywhere |
+| **Hard to test** | Testing one thing requires setting up ten |
+
+**Example Problem:**
+
+```js
+class NotificationService {
+  send(user, message, type) {
+    if (type === "email") {
+      EmailClient.send(user.email, message);
+    } else if (type === "push") {
+      PushClient.send(user.deviceToken, message);
+    }
+    // Adding SMS means editing this class ❌
+  }
+}
+```
+
+Adding a new notification type requires modifying existing code. This violates the Open/Closed Principle.
+
+**With Strategy Pattern:**
+
+```js
+// Each notification type is a separate strategy
+const strategies = {
+  email: (user, msg) => EmailClient.send(user.email, msg),
+  push: (user, msg) => PushClient.send(user.deviceToken, msg),
+  sms: (user, msg) => SmsClient.send(user.phone, msg), // Just add new strategy ✅
+};
+
+class NotificationService {
+  send(user, message, type) {
+    strategies[type](user, message);
+  }
+}
+```
+
+Adding a new type means adding a new strategy — no existing code changes.
+
+---
+
+### 2. Shared Vocabulary
+
+Instead of explaining:
+
+> "We'll create a base class with shared logic, then each implementation extends it..."
+
+You say:
+
+> "Let's use the **Template Method** pattern."
+
+Everyone immediately understands.
+
+---
+
+### 3. Proven Solutions
+
+You don't reinvent solutions. You apply patterns refined over decades.
+
+---
+
+## The Gang of Four (GoF)
+
+In 1994, four engineers published:
+
+**"Design Patterns: Elements of Reusable Object-Oriented Software"**
+
+They identified **23 classic patterns** organized into three categories:
+
+1. **Creational** — how objects are created
+2. **Structural** — how objects are composed
+3. **Behavioral** — how objects communicate
+
+The authors (Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides) are called the **Gang of Four**.
+
+---
+
+## The Three Categories
+
+### 1. Creational Patterns
+
+**Problem:** Object creation is complex or needs control.
+
+**Examples:**
+- **Singleton** — one shared instance
+- **Factory Method** — delegate creation to subclasses
+- **Builder** — construct complex objects step-by-step
+
+---
+
+### 2. Structural Patterns
+
+**Problem:** How to compose objects and classes.
+
+**Examples:**
+- **Adapter** — make incompatible interfaces work together
+- **Decorator** — add behavior dynamically
+- **Facade** — simple interface to complex system
+
+---
+
+### 3. Behavioral Patterns
+
+**Problem:** How objects communicate and distribute responsibility.
+
+**Examples:**
+- **Strategy** — swap algorithms at runtime
+- **Observer** — notify many objects when one changes
+- **Command** — encapsulate requests as objects
+
+---
+
+## When to Use Patterns
+
+✅ **Use patterns when:**
+
+- You have a recurring design problem
+- The pattern makes the code easier to extend
+- The pattern reduces coupling
+- You need to follow SOLID principles
+
+❌ **Avoid patterns when:**
+
+- The problem is simple — write straightforward code
+- You're adding them "just because"
+- The pattern makes code harder to understand
+
+<Callout type="remember">
+  **Simple code beats patterned code** — unless the pattern solves a real problem.
+</Callout>
+
+---
+
+## Example: When NOT to Use Patterns
+
+```js
+// ❌ Overengineered for 3 users
+class UserFactory {
+  create(data) { return new User(data); }
+}
+
+class UserRepository {
+  save(user) { database.insert(user); }
+}
+
+class UserService {
+  constructor(repo) { this.repo = repo; }
+  register(data) {
+    this.repo.save(UserFactory.create(data));
+  }
+}
+
+// ✅ Simple and clear
+function registerUser(data) {
+  database.insert({ id: generateId(), ...data });
+}
+```
+
+For 3 users, the simple version is better. Patterns add no value here.
+
+---
+
+## How Experienced Developers Use Patterns
+
+**Beginners think:**  
+"I'll learn all patterns and use them everywhere!"
+
+**Experts think:**  
+"I have a design problem. Does a pattern fit?"
+
+### The Process
+
+1. Write simple code first
+2. Notice a design problem (coupling, duplication, rigidity)
+3. Ask: "Have I seen this before?"
+4. If yes → apply the pattern
+5. If no → keep it simple until it becomes a problem
+
+<Callout type="tip">
+  Start simple. Add patterns when you feel the pain they solve.
+</Callout>
+
+---
+
+## Problem → Pattern → Implementation
+
+### 1. Problem
+
+Your code depends directly on MySQL. Switching to MongoDB requires rewriting everything.
+
+### 2. Pattern
+
+**Dependency Inversion Principle** + **Repository Pattern**  
+→ Depend on an abstraction, not a concrete database.
+
+### 3. Implementation
+
+```ts
+interface Database {
+  save(data: any): Promise<void>;
+}
+
+class MongoDatabase implements Database {
+  async save(data: any) { /* MongoDB */ }
+}
+
+class UserService {
+  constructor(private db: Database) {} // Depends on interface, not MongoDB
+  
+  async createUser(data: any) {
+    await this.db.save(data);
+  }
+}
+
+// Inject the concrete database
+const service = new UserService(new MongoDatabase());
+```
+
+Now switching databases means creating a new class — `UserService` never changes.
+
+---
+
+## Learning Path
+
+You'll learn patterns in order of difficulty and importance:
+
+**Foundations**
+1. OOP → SOLID Principles → This Introduction
+
+**Creational Patterns** (Object Creation)
+2. Singleton → Factory Method → Builder → Abstract Factory → Prototype
+
+**Structural Patterns** (Composition)
+3. Adapter → Facade → Decorator → Bridge → Composite → Flyweight → Proxy
+
+**Behavioral Patterns** (Communication)
+4. Strategy → Observer → Command → Chain of Responsibility → State → Iterator → Mediator → Memento → Template Method → Visitor
+
+**High-priority patterns** (most commonly used) are marked in each article.
+
+---
+
+## Key Takeaways
+
+✅ Patterns are **proven solutions** to common design problems  
+✅ They are **ideas**, not code you copy  
+✅ Use them to solve real problems — not "just because"  
+✅ **Three categories:** Creational, Structural, Behavioral  
+✅ Patterns improve communication (shared vocabulary)  
+✅ **Simple code > patterned code** — unless the pattern helps  
+✅ Start simple, add patterns when you feel the pain
+
+---
+
+## Quick Revision
+
+- **Design patterns** = reusable solutions to design problems
+- **Not** libraries, frameworks, or algorithms — they're design concepts
+- **23 GoF patterns** in three categories: Creational, Structural, Behavioral
+- **Use when:** you have a real problem they solve
+- **Avoid when:** simple code is good enough
+- **Goal:** easier to extend, test, and maintain
+
+---
+
+## One-Line Memory Trick
+
+**"Patterns are design recipes, not ingredients — use them when the recipe fits."**

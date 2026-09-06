@@ -1,0 +1,70 @@
+---
+title: "Bridge Pattern"
+description: "Decouple an abstraction from its implementation so that the two can vary independently."
+difficulty: "intermediate"
+readingTime: "11 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["structural", "bridge", "intermediate"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["adapter", "strategy"]
+summary: "Bridge separates abstraction from implementation, allowing both to vary independently."
+---
+
+## Pattern Information
+
+**Category:** Structural  
+**Difficulty:** 🟡 Intermediate  
+
+---
+
+## What Is Bridge?
+
+Bridge **separates** abstraction from implementation so they can change independently.
+
+<Callout type="definition">
+  **Bridge** = Separate what from how.
+</Callout>
+
+---
+
+## TypeScript Example
+
+```ts
+interface Device {
+  turnOn(): void;
+  turnOff(): void;
+}
+
+class TV implements Device {
+  turnOn() { console.log('TV on'); }
+  turnOff() { console.log('TV off'); }
+}
+
+class RemoteControl {
+  constructor(protected device: Device) {}
+  
+  powerOn() {
+    this.device.turnOn();
+  }
+}
+
+// Usage
+const remote = new RemoteControl(new TV());
+remote.powerOn();
+```
+
+---
+
+## When to Use
+
+✅ Avoid permanent binding between abstraction and implementation  
+✅ Both should be extensible  
+
+**Common:** Device drivers, GUI toolkits.
+
+---
+
+## One-Line Memory Trick
+
+**"Bridge is like a remote control — abstraction (remote) separate from implementation (TV)."**

@@ -1,0 +1,782 @@
+---
+title: "Builder Pattern"
+description: "Separate the construction of a complex object from its representation so the same construction process can create different representations."
+difficulty: "beginner"
+readingTime: "13 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["creational", "builder", "beginner", "high-priority", "interview-important"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["factory-method", "abstract-factory"]
+summary: "Builder pattern constructs complex objects step-by-step. It separates object construction from representation, making the same construction process create different objects."
+interviewQuestions:
+  - "What is the Builder pattern?"
+  - "When would you use Builder instead of a constructor?"
+  - "What is the difference between Builder and Factory Method?"
+  - "What problem does Builder solve?"
+  - "Give a real-world example of Builder pattern."
+---
+
+## Pattern Information
+
+**Category:** Creational  
+**Difficulty:** 🟢 Beginner  
+**Priority:** High  
+**Commonly Used:** Yes  
+**Relevant To:** Backend, Frontend, JavaScript, TypeScript, Node.js
+
+---
+
+## What Is Builder?
+
+Builder pattern lets you construct complex objects step-by-step. Instead of using a constructor with many parameters, you use a builder object that constructs the object piece by piece.
+
+The same construction process can create different representations of the object.
+
+<Callout type="definition">
+  **Builder** = Build complex objects step-by-step instead of all at once.
+</Callout>
+
+---
+
+## Why Does This Pattern Exist?
+
+Imagine you're building a system to create user profiles. A user has many optional fields:
+
+```ts
+class User {
+  constructor(
+    name: string,
+    email: string,
+    age?: number,
+    phone?: string,
+    address?: string,
+    bio?: string,
+    avatar?: string,
+    preferences?: object,
+    notifications?: boolean
+  ) {
+    this.name = name;
+    this.email = email;
+    this.age = age;
+    this.phone = phone;
+    this.address = address;
+    this.bio = bio;
+    this.avatar = avatar;
+    this.preferences = preferences;
+    this.notifications = notifications;
+  }
+}
+
+// Using it is messy
+const user = new User(
+  "Alice",
+  "alice@example.com",
+  undefined,  // age
+  undefined,  // phone
+  "123 Main St",  // address
+  undefined,  // bio
+  undefined,  // avatar
+  { theme: "dark" },  // preferences
+  true  // notifications
+);
+```
+
+**Problems:**
+
+- Too many parameters (hard to remember the order)
+- Many `undefined` values for optional fields
+- Hard to read — which parameter is which?
+- Adding new fields breaks existing code
+- Cannot validate during construction
+
+Builder pattern solves this.
+
+---
+
+## The Problem
+
+```js
+// Option 1: Constructor with many parameters
+const pizza = new Pizza(
+  "large",      // size
+  true,         // cheese
+  true,         // pepperoni
+  false,        // mushrooms
+  true,         // olives
+  false,        // bacon
+  "thick"       // crust
+);
+
+// Option 2: Setting properties manually
+const pizza = new Pizza();
+pizza.size = "large";
+pizza.cheese = true;
+pizza.pepperoni = true;
+pizza.olives = true;
+pizza.crust = "thick";
+```
+
+**Problems with Option 1:**
+- Parameter order is hard to remember
+- Too many parameters
+- Cannot enforce required fields
+
+**Problems with Option 2:**
+- Object is in invalid state during construction
+- No validation
+- Easy to forget required fields
+
+---
+
+## What Is Wrong With This Approach?
+
+- **Telescoping constructors** — multiple constructors with different parameter combinations
+- **Error-prone** — easy to pass parameters in wrong order
+- **Hard to read** — `new User("Alice", undefined, undefined, "123 Main St")`
+- **No validation** — cannot validate the object during construction
+- **Inflexible** — adding fields means changing constructors
+
+---
+
+## The Idea Behind the Pattern
+
+What if instead of creating the object all at once, you built it step-by-step?
+
+You have a **Builder** that:
+
+1. Provides methods to set each property
+2. Each method returns the builder itself (method chaining)
+3. Has a `build()` method that creates the final object
+4. Can validate before building
+
+This way:
+
+- Construction is clear and readable
+- Order doesn't matter
+- Optional fields are obvious
+- Can validate before creating the object
+
+---
+
+## How Does It Work?
+
+### Step-by-Step
+
+1. Create a **Builder class**
+2. Add methods to set each property (each returns `this`)
+3. Add a `build()` method that creates the final object
+4. Optionally validate in `build()`
+
+---
+
+## Structure
+
+```text
+         Director
+            │
+            │ constructs using
+            ▼
+        Builder ◄────────── defines interface
+            △
+            │
+            │ implements
+    ┌───────┴────────┐
+    │                │
+ConcreteBuilder   ConcreteBuilder
+    │                │
+    │ builds         │ builds
+    ▼                ▼
+Product A        Product B
+```
+
+**Key parts:**
+
+- **Builder** — defines the building steps
+- **Concrete Builder** — implements the steps and tracks what's being built
+- **Product** — the complex object being built
+- **Director** (optional) — orchestrates the building process
+
+---
+
+## Simple Real-World Analogy
+
+Think of ordering a **custom burger** at a restaurant:
+
+```text
+"I want a burger with:
+- Beef patty
+- Cheese
+- Lettuce
+- No tomatoes
+- Extra pickles
+- Sesame bun"
+```
+
+You don't say:
+
+```text
+"Give me burger(beef, true, true, false, 2, sesame)"
+```
+
+You build it step-by-step. The chef (builder) assembles it based on your choices.
+
+---
+
+## TypeScript Example
+
+### Step 1: Define the Product
+
+```ts
+class User {
+  name: string;
+  email: string;
+  age?: number;
+  phone?: string;
+  address?: string;
+  
+  constructor(builder: UserBuilder) {
+    this.name = builder.name;
+    this.email = builder.email;
+    this.age = builder.age;
+    this.phone = builder.phone;
+    this.address = builder.address;
+  }
+}
+```
+
+### Step 2: Create the Builder
+
+```ts
+class UserBuilder {
+  name: string = "";
+  email: string = "";
+  age?: number;
+  phone?: string;
+  address?: string;
+
+  setName(name: string): UserBuilder {
+    this.name = name;
+    return this; // Return this for chaining
+  }
+
+  setEmail(email: string): UserBuilder {
+    this.email = email;
+    return this;
+  }
+
+  setAge(age: number): UserBuilder {
+    this.age = age;
+    return this;
+  }
+
+  setPhone(phone: string): UserBuilder {
+    this.phone = phone;
+    return this;
+  }
+
+  setAddress(address: string): UserBuilder {
+    this.address = address;
+    return this;
+  }
+
+  build(): User {
+    // Validate required fields
+    if (!this.name || !this.email) {
+      throw new Error("Name and email are required");
+    }
+    return new User(this);
+  }
+}
+```
+
+### Step 3: Use the Builder
+
+```ts
+const user = new UserBuilder()
+  .setName("Alice")
+  .setEmail("alice@example.com")
+  .setAge(25)
+  .setAddress("123 Main St")
+  .build();
+
+console.log(user);
+// User { name: 'Alice', email: 'alice@example.com', age: 25, address: '123 Main St' }
+
+// Only required fields
+const simpleUser = new UserBuilder()
+  .setName("Bob")
+  .setEmail("bob@example.com")
+  .build();
+```
+
+**What happened:**
+
+- Clear, readable construction
+- Method chaining (fluent interface)
+- Order doesn't matter
+- Optional fields are obvious
+- Validation in `build()`
+
+---
+
+## JavaScript Version (Simpler)
+
+```js
+class Pizza {
+  constructor() {
+    this.size = "medium";
+    this.cheese = true;
+    this.toppings = [];
+  }
+}
+
+class PizzaBuilder {
+  constructor() {
+    this.pizza = new Pizza();
+  }
+
+  setSize(size) {
+    this.pizza.size = size;
+    return this;
+  }
+
+  addCheese(cheese) {
+    this.pizza.cheese = cheese;
+    return this;
+  }
+
+  addTopping(topping) {
+    this.pizza.toppings.push(topping);
+    return this;
+  }
+
+  build() {
+    return this.pizza;
+  }
+}
+
+// Usage
+const pizza = new PizzaBuilder()
+  .setSize("large")
+  .addCheese(true)
+  .addTopping("pepperoni")
+  .addTopping("mushrooms")
+  .addTopping("olives")
+  .build();
+
+console.log(pizza);
+```
+
+---
+
+## Modern JavaScript: Object Builder
+
+In modern JavaScript, you can use a simple object-based builder:
+
+```js
+class QueryBuilder {
+  constructor() {
+    this.query = {
+      select: [],
+      from: "",
+      where: [],
+      orderBy: [],
+    };
+  }
+
+  select(...fields) {
+    this.query.select.push(...fields);
+    return this;
+  }
+
+  from(table) {
+    this.query.from = table;
+    return this;
+  }
+
+  where(condition) {
+    this.query.where.push(condition);
+    return this;
+  }
+
+  orderBy(field) {
+    this.query.orderBy.push(field);
+    return this;
+  }
+
+  build() {
+    const { select, from, where, orderBy } = this.query;
+    let sql = `SELECT ${select.join(", ")} FROM ${from}`;
+    if (where.length) sql += ` WHERE ${where.join(" AND ")}`;
+    if (orderBy.length) sql += ` ORDER BY ${orderBy.join(", ")}`;
+    return sql;
+  }
+}
+
+// Usage
+const sql = new QueryBuilder()
+  .select("id", "name", "email")
+  .from("users")
+  .where("age > 18")
+  .where("status = 'active'")
+  .orderBy("name")
+  .build();
+
+console.log(sql);
+// SELECT id, name, email FROM users WHERE age > 18 AND status = 'active' ORDER BY name
+```
+
+---
+
+## How the Pattern Solves the Problem
+
+| Before (Constructor) | After (Builder) |
+|---|---|
+| Many parameters, hard to remember order | Step-by-step, clear construction |
+| Optional fields filled with `undefined` | Only set what you need |
+| Hard to read | Fluent, readable API |
+| No validation during construction | Validate in `build()` |
+| Adding fields breaks existing code | Extend builder without breaking code |
+
+---
+
+## Advantages
+
+✅ **Readable code** — clear what's being set  
+✅ **Flexible** — only set fields you need  
+✅ **Immutability** — product is immutable after building  
+✅ **Validation** — validate in `build()` before creating object  
+✅ **Method chaining** — fluent interface  
+✅ **Reusable** — same builder can create different objects
+
+---
+
+## Disadvantages
+
+⚠️ **More code** — requires a separate builder class  
+⚠️ **Overhead** — overkill for simple objects  
+⚠️ **Complexity** — more classes to maintain
+
+<Callout type="tip">
+  Use Builder when constructors have 4+ parameters, especially with optional fields.
+</Callout>
+
+---
+
+## When Should I Use It?
+
+Use Builder when:
+
+✅ Object construction is complex (many parameters)  
+✅ Many optional fields  
+✅ You want to enforce immutability  
+✅ Construction requires multiple steps  
+✅ Same construction process should create different objects  
+
+**Common use cases:**
+
+- **HTTP Request builders** (axios, fetch)
+- **SQL Query builders** (Knex, Prisma)
+- **Form builders**
+- **Configuration objects**
+- **Test data builders**
+
+---
+
+## When Should I NOT Use It?
+
+Avoid Builder when:
+
+❌ Object is simple (1-3 required fields)  
+❌ No optional fields  
+❌ Constructor is clear and simple  
+
+```js
+// ❌ Overkill
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+}
+
+// ✅ Simple constructor is fine
+const point = new Point(10, 20);
+```
+
+---
+
+## Real-World Examples
+
+### 1. HTTP Request Builder
+
+```ts
+class RequestBuilder {
+  private url: string = "";
+  private method: string = "GET";
+  private headers: Record<string, string> = {};
+  private body?: any;
+
+  setUrl(url: string): RequestBuilder {
+    this.url = url;
+    return this;
+  }
+
+  setMethod(method: string): RequestBuilder {
+    this.method = method;
+    return this;
+  }
+
+  setHeader(key: string, value: string): RequestBuilder {
+    this.headers[key] = value;
+    return this;
+  }
+
+  setBody(body: any): RequestBuilder {
+    this.body = body;
+    return this;
+  }
+
+  async execute(): Promise<Response> {
+    return fetch(this.url, {
+      method: this.method,
+      headers: this.headers,
+      body: this.body ? JSON.stringify(this.body) : undefined,
+    });
+  }
+}
+
+// Usage
+const response = await new RequestBuilder()
+  .setUrl("https://api.example.com/users")
+  .setMethod("POST")
+  .setHeader("Content-Type", "application/json")
+  .setHeader("Authorization", "Bearer token123")
+  .setBody({ name: "Alice", email: "alice@example.com" })
+  .execute();
+```
+
+---
+
+### 2. Email Builder
+
+```ts
+class EmailBuilder {
+  private to: string[] = [];
+  private subject: string = "";
+  private body: string = "";
+  private cc: string[] = [];
+  private attachments: string[] = [];
+
+  addRecipient(email: string): EmailBuilder {
+    this.to.push(email);
+    return this;
+  }
+
+  setSubject(subject: string): EmailBuilder {
+    this.subject = subject;
+    return this;
+  }
+
+  setBody(body: string): EmailBuilder {
+    this.body = body;
+    return this;
+  }
+
+  addCC(email: string): EmailBuilder {
+    this.cc.push(email);
+    return this;
+  }
+
+  addAttachment(file: string): EmailBuilder {
+    this.attachments.push(file);
+    return this;
+  }
+
+  send(): void {
+    if (!this.to.length || !this.subject || !this.body) {
+      throw new Error("Recipient, subject, and body are required");
+    }
+    console.log(`Sending email to ${this.to.join(", ")}`);
+    // Send email logic
+  }
+}
+
+// Usage
+new EmailBuilder()
+  .addRecipient("user@example.com")
+  .setSubject("Welcome!")
+  .setBody("Thanks for signing up")
+  .addCC("admin@example.com")
+  .send();
+```
+
+---
+
+### 3. Test Data Builder (Common in Testing)
+
+```ts
+class UserTestBuilder {
+  private name: string = "Test User";
+  private email: string = "test@example.com";
+  private age: number = 25;
+  private role: string = "user";
+
+  withName(name: string): UserTestBuilder {
+    this.name = name;
+    return this;
+  }
+
+  withEmail(email: string): UserTestBuilder {
+    this.email = email;
+    return this;
+  }
+
+  withAge(age: number): UserTestBuilder {
+    this.age = age;
+    return this;
+  }
+
+  asAdmin(): UserTestBuilder {
+    this.role = "admin";
+    return this;
+  }
+
+  build(): User {
+    return new User(this.name, this.email, this.age, this.role);
+  }
+}
+
+// In tests
+const testUser = new UserTestBuilder()
+  .withName("Alice")
+  .asAdmin()
+  .build();
+```
+
+---
+
+## Common Mistakes
+
+### Mistake 1: Not Returning `this`
+
+```js
+// ❌ Breaks method chaining
+setName(name) {
+  this.name = name;
+  // Forgot to return this
+}
+
+// ✅ Correct
+setName(name) {
+  this.name = name;
+  return this;
+}
+```
+
+---
+
+### Mistake 2: Validating in Setters Instead of Build
+
+```js
+// ❌ Too strict — can't build step-by-step
+setEmail(email) {
+  if (!this.name) throw new Error("Set name first!");
+  this.email = email;
+  return this;
+}
+
+// ✅ Validate in build()
+build() {
+  if (!this.name || !this.email) {
+    throw new Error("Name and email required");
+  }
+  return new User(this);
+}
+```
+
+---
+
+## Common Misconceptions
+
+### "Builder and Factory Method are the same"
+
+No.
+
+- **Factory Method** decides **which class** to instantiate
+- **Builder** constructs **one complex object** step-by-step
+
+### "Builder always needs a Director"
+
+No. The Director is optional. Most modern implementations skip it.
+
+---
+
+## Related SOLID Principles
+
+### Single Responsibility Principle (SRP)
+
+✅ Builder has one job: construct objects. The product class has its own responsibilities.
+
+### Open/Closed Principle (OCP)
+
+✅ Easy to extend builder with new fields without modifying existing code.
+
+---
+
+## Related Design Patterns
+
+### Factory Method
+
+Both are creational. Factory chooses **which** object to create. Builder constructs **how** to create one complex object.
+
+### Fluent Interface
+
+Builder often uses fluent interface (method chaining).
+
+---
+
+## Interview Questions
+
+**Q1: What is the Builder pattern?**  
+A: A creational pattern that constructs complex objects step-by-step, separating construction from representation.
+
+**Q2: When would you use Builder instead of a constructor?**  
+A: When the constructor has many parameters (especially optional ones), or when construction requires multiple steps.
+
+**Q3: What's the difference between Builder and Factory Method?**  
+A: Factory Method decides which class to instantiate. Builder constructs one complex object step-by-step.
+
+**Q4: What problem does Builder solve?**  
+A: Telescoping constructors, hard-to-read parameter lists, and difficulty managing optional fields.
+
+**Q5: Give a real-world example.**  
+A: HTTP request builders (fetch API), SQL query builders (Knex.js), or form builders in frontend frameworks.
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "Builder pattern constructs complex objects step-by-step using a fluent interface. Instead of a constructor with many parameters, you use a builder with methods for each property. Each method returns the builder itself, allowing method chaining. A `build()` method creates the final object and can validate it. This makes code more readable, handles optional fields elegantly, and separates construction logic from the object itself. Common examples include HTTP request builders, SQL query builders, and test data builders."
+
+---
+
+## Quick Revision
+
+- Builder constructs **complex objects step-by-step**
+- Uses **method chaining** (fluent interface)
+- Each setter returns `this`
+- `build()` creates the final object
+- **Validates** in `build()` before creating object
+- **Readable** — clear what's being set
+- **Flexible** — only set what you need
+- Common in: **HTTP requests, SQL queries, forms, test data**
+- Use when: 4+ parameters, many optional fields
+- Avoid when: simple objects with 1-3 fields
+
+---
+
+## One-Line Memory Trick
+
+**"Builder is like ordering a custom burger — you specify each ingredient step-by-step, not all at once."**

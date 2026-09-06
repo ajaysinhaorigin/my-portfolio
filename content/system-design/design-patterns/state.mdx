@@ -1,0 +1,224 @@
+---
+title: "State Pattern"
+description: "Allow an object to alter its behavior when its internal state changes. The object will appear to change its class."
+difficulty: "intermediate"
+readingTime: "12 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["behavioral", "state", "intermediate", "high-priority", "interview-important"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["strategy", "command"]
+summary: "State pattern lets an object change its behavior based on its internal state. Different states are represented as separate classes."
+interviewQuestions:
+  - "What is the State pattern?"
+  - "What's the difference between State and Strategy?"
+  - "When would you use State pattern?"
+  - "How does State pattern eliminate conditionals?"
+---
+
+## Pattern Information
+
+**Category:** Behavioral  
+**Difficulty:** 🟡 Intermediate  
+**Priority:** High  
+**Commonly Used:** Yes  
+**Relevant To:** Backend, Frontend, JavaScript, TypeScript, State Machines
+
+---
+
+## What Is State?
+
+State pattern lets an object change its behavior when its internal state changes. Instead of using `if/else` or `switch` statements, each state is a separate class.
+
+<Callout type="definition">
+  **State** = Different behavior for different states, encapsulated in state classes.
+</Callout>
+
+---
+
+## Why Does This Pattern Exist?
+
+A document has states: Draft, Moderation, Published.
+
+**Without State:**
+
+```ts
+class Document {
+  state: string = 'draft';
+
+  publish() {
+    if (this.state === 'draft') {
+      this.state = 'moderation';
+    } else if (this.state === 'moderation') {
+      this.state = 'published';
+    } else if (this.state === 'published') {
+      console.log('Already published');
+    }
+  }
+  
+  // More methods with similar if/else chains
+}
+```
+
+**With State Pattern:**
+
+```ts
+class Document {
+  private state: State;
+  
+  publish() {
+    this.state.publish(this); // Delegate to state
+  }
+}
+```
+
+---
+
+## The Problem
+
+```ts
+class TrafficLight {
+  state: string = 'red';
+
+  change() {
+    if (this.state === 'red') {
+      this.state = 'green';
+    } else if (this.state === 'green') {
+      this.state = 'yellow';
+    } else if (this.state === 'yellow') {
+      this.state = 'red';
+    }
+  }
+}
+```
+
+**Problems:**
+
+- Large `if/else` chains
+- Adding new states means modifying all methods
+- Violates Open/Closed Principle
+
+---
+
+## The Idea Behind the Pattern
+
+Represent each state as a **separate class**. The context delegates behavior to the current state object.
+
+---
+
+## TypeScript Example
+
+```ts
+interface State {
+  publish(doc: Document): void;
+  review(doc: Document): void;
+}
+
+class DraftState implements State {
+  publish(doc: Document): void {
+    console.log('Moving to moderation');
+    doc.setState(new ModerationState());
+  }
+  
+  review(doc: Document): void {
+    console.log('Cannot review draft');
+  }
+}
+
+class ModerationState implements State {
+  publish(doc: Document): void {
+    console.log('Publishing document');
+    doc.setState(new PublishedState());
+  }
+  
+  review(doc: Document): void {
+    console.log('Reviewing document');
+  }
+}
+
+class PublishedState implements State {
+  publish(doc: Document): void {
+    console.log('Already published');
+  }
+  
+  review(doc: Document): void {
+    console.log('Cannot review published doc');
+  }
+}
+
+class Document {
+  private state: State = new DraftState();
+
+  setState(state: State): void {
+    this.state = state;
+  }
+
+  publish(): void {
+    this.state.publish(this);
+  }
+
+  review(): void {
+    this.state.review(this);
+  }
+}
+
+// Usage
+const doc = new Document();
+doc.publish(); // Moving to moderation
+doc.publish(); // Publishing document
+doc.publish(); // Already published
+```
+
+---
+
+## Advantages
+
+✅ **Eliminates conditionals** — no `if/else` chains  
+✅ **Open/Closed** — add states without modifying existing code  
+✅ **Single Responsibility** — each state is a class  
+
+---
+
+## Disadvantages
+
+⚠️ **Many classes** — one per state  
+⚠️ **Overkill** for simple cases  
+
+---
+
+## When Should I Use It?
+
+Use State when:
+
+✅ Object behavior changes based on state  
+✅ Large `if/else` or `switch` statements  
+✅ Many states with different behaviors  
+
+**Common use cases:**
+
+- Document workflow (Draft → Published)
+- TCP connections (Closed → Open → Closed)
+- Game states (Menu → Playing → Paused)
+- Order status (Pending → Shipped → Delivered)
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "State is a behavioral pattern where an object changes its behavior based on its internal state. Each state is encapsulated in a separate class. Instead of if/else chains, the context delegates to the current state object. This follows the Open/Closed Principle—adding new states means creating new classes, not modifying existing ones. Common in document workflows, game states, and connection management."
+
+---
+
+## Quick Revision
+
+- State **encapsulates** different behaviors in state classes
+- Context **delegates** to current state
+- **Eliminates** `if/else` chains
+- **OCP** — add states without modifying context
+- Different from **Strategy** — Strategy selects algorithm, State changes based on internal state
+
+---
+
+## One-Line Memory Trick
+
+**"State is like a traffic light — different behavior for each state, transitions automatically."**

@@ -1,0 +1,672 @@
+---
+title: "Command Pattern"
+description: "Encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations."
+difficulty: "beginner"
+readingTime: "13 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["behavioral", "command", "beginner", "high-priority", "interview-important", "undo-redo"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["strategy", "memento", "observer"]
+summary: "Command pattern encapsulates requests as objects. This enables parameterization, queuing, logging, and undo/redo functionality."
+interviewQuestions:
+  - "What is the Command pattern?"
+  - "How does Command pattern enable undo/redo?"
+  - "What's the difference between Command and Strategy?"
+  - "When would you use Command pattern?"
+  - "Give a real-world example of Command."
+---
+
+## Pattern Information
+
+**Category:** Behavioral  
+**Difficulty:** 🟢 Beginner  
+**Priority:** High  
+**Commonly Used:** Yes  
+**Relevant To:** Backend, Frontend, JavaScript, TypeScript, UI, Undo/Redo
+
+---
+
+## What Is Command?
+
+Command pattern turns requests into objects. Instead of calling methods directly, you create **command objects** that encapsulate the action.
+
+This lets you:
+- Pass commands as parameters
+- Queue commands
+- Log commands
+- Undo/redo commands
+
+<Callout type="definition">
+  **Command** = Encapsulate a request as an object, enabling parameterization, queuing, logging, and undo/redo.
+</Callout>
+
+---
+
+## Why Does This Pattern Exist?
+
+You're building a text editor with an undo/redo feature.
+
+**Without Command:**
+
+```js
+class Editor {
+  text = "";
+
+  type(char) {
+    this.text += char;
+  }
+
+  delete() {
+    this.text = this.text.slice(0, -1);
+  }
+}
+
+// How do you undo?
+// You'd need to track every action manually ❌
+```
+
+**With Command:**
+
+```js
+// Each action is a command object
+const typeCommand = new TypeCommand('a');
+const deleteCommand = new DeleteCommand();
+
+// Execute commands
+typeCommand.execute();
+deleteCommand.execute();
+
+// Undo is easy — just call undo()
+deleteCommand.undo();
+typeCommand.undo();
+```
+
+Commands are **objects**, so you can store them in a history stack and undo/redo easily.
+
+---
+
+## The Problem
+
+```js
+class RemoteControl {
+  constructor(light) {
+    this.light = light;
+  }
+
+  pressButton() {
+    this.light.turnOn(); // Directly calls light
+  }
+}
+
+// Problems:
+// - RemoteControl is tightly coupled to Light
+// - Cannot support undo
+// - Cannot queue or log commands
+// - Cannot swap actions at runtime
+```
+
+**What if you want:**
+
+- Different buttons to control different devices?
+- Undo/redo functionality?
+- Command history/logging?
+- Macro commands (one button executes multiple commands)?
+
+You need to **decouple** the request from the action.
+
+---
+
+## What Is Wrong With This Approach?
+
+- **Tight coupling** — caller directly invokes methods on receiver
+- **No undo** — cannot reverse actions
+- **No history** — cannot track what was done
+- **Inflexible** — cannot queue, parameterize, or log requests
+
+---
+
+## The Idea Behind the Pattern
+
+What if actions were **objects**?
+
+1. Create a **Command object** for each action
+2. The command knows **what to do** and **how to undo** it
+3. The invoker (e.g., remote control) just calls `execute()` on the command
+4. Store commands in a history stack for undo/redo
+
+This decouples:
+- **Invoker** (remote control) from **Receiver** (light)
+- Commands can be stored, queued, logged, and undone
+
+---
+
+## How Does It Work?
+
+### Step-by-Step
+
+1. Define a **Command interface** with `execute()` (and optionally `undo()`)
+2. Create **Concrete Commands** that implement the interface
+3. The **Invoker** calls `execute()` on commands
+4. The **Receiver** is the object that performs the actual work
+5. Store commands in a stack for undo/redo
+
+---
+
+## Structure
+
+```text
+    Invoker                  Command
+       │                    (interface)
+       │ calls execute()        △
+       │                        │ implements
+       ▼                        │
+    Command ────────────► ConcreteCommand
+                               │
+                               │ knows about
+                               ▼
+                            Receiver
+```
+
+**Key parts:**
+
+- **Command** — interface with `execute()` and `undo()`
+- **Concrete Command** — implements `execute()` and `undo()`
+- **Receiver** — the object that does the actual work
+- **Invoker** — triggers commands by calling `execute()`
+
+---
+
+## Simple Real-World Analogy
+
+Think of a **restaurant order**.
+
+- **Customer** (Invoker) → places an order
+- **Order slip** (Command) → encapsulates the request
+- **Waiter** → delivers the order slip to the kitchen
+- **Chef** (Receiver) → prepares the food
+
+The order slip is an object. It can be:
+- Queued (multiple orders)
+- Logged (kept for records)
+- Canceled (undo)
+
+The customer doesn't call the chef directly. The order slip decouples them.
+
+---
+
+## TypeScript Example
+
+### Step 1: Define the Command Interface
+
+```ts
+interface Command {
+  execute(): void;
+  undo(): void;
+}
+```
+
+### Step 2: Create the Receiver
+
+```ts
+class Light {
+  turnOn(): void {
+    console.log("Light is ON");
+  }
+
+  turnOff(): void {
+    console.log("Light is OFF");
+  }
+}
+```
+
+### Step 3: Create Concrete Commands
+
+```ts
+class LightOnCommand implements Command {
+  constructor(private light: Light) {}
+
+  execute(): void {
+    this.light.turnOn();
+  }
+
+  undo(): void {
+    this.light.turnOff(); // Undo turns light off
+  }
+}
+
+class LightOffCommand implements Command {
+  constructor(private light: Light) {}
+
+  execute(): void {
+    this.light.turnOff();
+  }
+
+  undo(): void {
+    this.light.turnOn(); // Undo turns light on
+  }
+}
+```
+
+### Step 4: Create the Invoker
+
+```ts
+class RemoteControl {
+  private history: Command[] = [];
+
+  execute(command: Command): void {
+    command.execute();
+    this.history.push(command); // Store for undo
+  }
+
+  undo(): void {
+    const command = this.history.pop();
+    if (command) {
+      command.undo();
+    }
+  }
+}
+```
+
+### Step 5: Use the Pattern
+
+```ts
+const light = new Light();
+const remote = new RemoteControl();
+
+const lightOn = new LightOnCommand(light);
+const lightOff = new LightOffCommand(light);
+
+remote.execute(lightOn);  // Light is ON
+remote.execute(lightOff); // Light is OFF
+remote.undo();            // Light is ON (undo last command)
+remote.undo();            // Light is OFF (undo again)
+```
+
+**What happened:**
+
+- Each action is a command object
+- Commands are stored in a history stack
+- Undo is trivial — pop from history and call `undo()`
+
+---
+
+## JavaScript Version (Simpler)
+
+```js
+class TextEditor {
+  constructor() {
+    this.text = "";
+    this.history = [];
+  }
+
+  executeCommand(command) {
+    command.execute();
+    this.history.push(command);
+  }
+
+  undo() {
+    const command = this.history.pop();
+    if (command) command.undo();
+  }
+}
+
+// Commands
+class TypeCommand {
+  constructor(editor, char) {
+    this.editor = editor;
+    this.char = char;
+  }
+
+  execute() {
+    this.editor.text += this.char;
+    console.log(`Text: ${this.editor.text}`);
+  }
+
+  undo() {
+    this.editor.text = this.editor.text.slice(0, -1);
+    console.log(`Text: ${this.editor.text}`);
+  }
+}
+
+class DeleteCommand {
+  constructor(editor) {
+    this.editor = editor;
+    this.deletedChar = "";
+  }
+
+  execute() {
+    this.deletedChar = this.editor.text.slice(-1);
+    this.editor.text = this.editor.text.slice(0, -1);
+    console.log(`Text: ${this.editor.text}`);
+  }
+
+  undo() {
+    this.editor.text += this.deletedChar;
+    console.log(`Text: ${this.editor.text}`);
+  }
+}
+
+// Usage
+const editor = new TextEditor();
+editor.executeCommand(new TypeCommand(editor, 'H'));
+editor.executeCommand(new TypeCommand(editor, 'i'));
+editor.executeCommand(new DeleteCommand(editor));
+editor.undo(); // Undo delete
+editor.undo(); // Undo type 'i'
+```
+
+---
+
+## How the Pattern Solves the Problem
+
+| Before (Direct Calls) | After (Command) |
+|---|---|
+| Tight coupling | Decoupled via command objects |
+| No undo | Commands have `undo()` |
+| No history | Commands stored in history |
+| Inflexible | Commands can be queued, logged, parameterized |
+
+---
+
+## Advantages
+
+✅ **Undo/Redo** — commands can reverse themselves  
+✅ **Decoupling** — invoker and receiver are independent  
+✅ **Queueing** — commands can be queued  
+✅ **Logging** — commands can be logged for replay  
+✅ **Macro commands** — combine multiple commands  
+✅ **Open/Closed Principle** — add new commands without changing existing code
+
+---
+
+## Disadvantages
+
+⚠️ **Many classes** — one command class per action  
+⚠️ **Complexity** — overkill for simple operations  
+⚠️ **Memory** — storing history can use memory
+
+---
+
+## When Should I Use It?
+
+Use Command when:
+
+✅ You need **undo/redo** functionality  
+✅ You want to **queue** or **schedule** operations  
+✅ You need to **log** operations  
+✅ You want to **parameterize** objects with operations  
+✅ You need **macro commands** (composite operations)
+
+**Common use cases:**
+
+- **Text editors** (undo/redo)
+- **UI actions** (button clicks)
+- **Transaction systems** (rollback)
+- **Job queues** (background tasks)
+- **Game actions** (replay)
+
+---
+
+## When Should I NOT Use It?
+
+Avoid Command when:
+
+❌ No need for undo/redo or history  
+❌ Simple, direct method calls are sufficient  
+❌ The added complexity isn't justified  
+
+---
+
+## Real-World Examples
+
+### 1. Undo/Redo in Text Editor
+
+```ts
+interface Command {
+  execute(): void;
+  undo(): void;
+}
+
+class Editor {
+  text = "";
+}
+
+class InsertTextCommand implements Command {
+  private insertedText: string;
+
+  constructor(
+    private editor: Editor,
+    private text: string,
+    private position: number
+  ) {}
+
+  execute(): void {
+    this.insertedText = this.text;
+    const before = this.editor.text.slice(0, this.position);
+    const after = this.editor.text.slice(this.position);
+    this.editor.text = before + this.text + after;
+  }
+
+  undo(): void {
+    const before = this.editor.text.slice(0, this.position);
+    const after = this.editor.text.slice(this.position + this.insertedText.length);
+    this.editor.text = before + after;
+  }
+}
+```
+
+---
+
+### 2. Task Queue
+
+```ts
+interface Task extends Command {
+  execute(): void;
+  undo(): void;
+}
+
+class SendEmailTask implements Task {
+  constructor(private to: string, private message: string) {}
+
+  execute(): void {
+    console.log(`Sending email to ${this.to}: ${this.message}`);
+    // Send email
+  }
+
+  undo(): void {
+    console.log(`Rolling back email to ${this.to}`);
+    // Cannot truly undo email, but can log it
+  }
+}
+
+class TaskQueue {
+  private queue: Task[] = [];
+
+  addTask(task: Task): void {
+    this.queue.push(task);
+  }
+
+  processAll(): void {
+    this.queue.forEach(task => task.execute());
+    this.queue = [];
+  }
+}
+
+// Usage
+const queue = new TaskQueue();
+queue.addTask(new SendEmailTask("user@example.com", "Hello"));
+queue.processAll();
+```
+
+---
+
+### 3. Macro Command (Composite)
+
+```ts
+class MacroCommand implements Command {
+  private commands: Command[] = [];
+
+  add(command: Command): void {
+    this.commands.push(command);
+  }
+
+  execute(): void {
+    this.commands.forEach(cmd => cmd.execute());
+  }
+
+  undo(): void {
+    // Undo in reverse order
+    this.commands.reverse().forEach(cmd => cmd.undo());
+    this.commands.reverse(); // Restore original order
+  }
+}
+
+// Usage
+const light = new Light();
+const fan = new Fan();
+
+const macro = new MacroCommand();
+macro.add(new LightOnCommand(light));
+macro.add(new FanOnCommand(fan));
+
+macro.execute(); // Turn on light and fan
+macro.undo();    // Turn off fan and light (reverse order)
+```
+
+---
+
+## Common Mistakes
+
+### Mistake 1: Commands Without Undo
+
+```ts
+// ❌ Missing undo — cannot reverse
+class SaveCommand implements Command {
+  execute() {
+    saveToDatabase();
+  }
+  // No undo() method
+}
+
+// ✅ Implement undo (even if it's a no-op)
+class SaveCommand implements Command {
+  execute() {
+    saveToDatabase();
+  }
+  undo() {
+    console.warn("Cannot undo save");
+  }
+}
+```
+
+---
+
+### Mistake 2: Command Does Too Much
+
+```ts
+// ❌ Command contains business logic
+class CreateUserCommand {
+  execute() {
+    validateEmail(); // ❌ Business logic
+    hashPassword();  // ❌ Business logic
+    saveToDb();
+  }
+}
+
+// ✅ Command delegates to receiver
+class CreateUserCommand {
+  execute() {
+    this.userService.createUser(this.userData);
+  }
+}
+```
+
+**Rule:** Commands should be thin wrappers. Business logic belongs in the receiver.
+
+---
+
+## Common Misconceptions
+
+### "Command and Strategy are the same"
+
+No.
+
+- **Command** encapsulates a **request** (action)
+- **Strategy** encapsulates an **algorithm** (how to do something)
+
+### "All commands must support undo"
+
+Not always. Some operations (e.g., sending an email) cannot be truly undone. Implement `undo()` as a no-op or log the failure.
+
+---
+
+## Related SOLID Principles
+
+### Single Responsibility Principle (SRP)
+
+✅ Each command has one responsibility — execute one action.
+
+### Open/Closed Principle (OCP)
+
+✅ Add new commands without modifying existing code.
+
+---
+
+## Related Design Patterns
+
+### Strategy
+
+**Difference:** Strategy swaps algorithms. Command encapsulates requests.
+
+### Memento
+
+**Difference:** Memento stores state for undo. Command executes and undoes actions.
+
+### Chain of Responsibility
+
+Can be combined — pass commands through a chain of handlers.
+
+---
+
+## Interview Questions
+
+**Q1: What is the Command pattern?**  
+A: A behavioral pattern that encapsulates requests as objects, enabling parameterization, queuing, logging, and undo/redo.
+
+**Q2: How does Command enable undo/redo?**  
+A: Commands have an `undo()` method that reverses their action. Store commands in a history stack, and undo by popping and calling `undo()`.
+
+**Q3: What's the difference between Command and Strategy?**  
+A: Command encapsulates requests (actions). Strategy encapsulates algorithms (how to do something).
+
+**Q4: When would you use Command?**  
+A: When you need undo/redo, queueing, logging, or macro commands.
+
+**Q5: Give a real-world example.**  
+A: Text editor undo/redo, task queues, UI button actions, or game action replay systems.
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "Command is a behavioral pattern that encapsulates requests as objects. Each command has an `execute()` method and optionally an `undo()` method. This decouples the invoker from the receiver and enables undo/redo, queuing, logging, and macro commands. Commands are stored in a history stack—undo pops a command and calls its `undo()`. It's commonly used in text editors, UI systems, and transaction systems. The key benefit is separating what to do from who does it."
+
+---
+
+## Quick Revision
+
+- Command **encapsulates requests** as objects
+- Has `execute()` and `undo()` methods
+- **Decouples** invoker from receiver
+- Store commands in **history** for undo/redo
+- Can **queue**, **log**, and **parameterize** commands
+- **Macro commands** combine multiple commands
+- Common in: **text editors, UI, transactions, task queues**
+- Different from **Strategy** (algorithms) and **Memento** (state)
+
+---
+
+## One-Line Memory Trick
+
+**"Command is like a restaurant order slip — encapsulates the request so it can be queued, logged, and canceled."**

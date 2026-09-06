@@ -1,0 +1,76 @@
+---
+title: "Flyweight Pattern"
+description: "Use sharing to support large numbers of fine-grained objects efficiently."
+difficulty: "advanced"
+readingTime: "10 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["structural", "flyweight", "advanced", "performance"]
+prerequisites: ["oop"]
+relatedTopics: ["singleton"]
+summary: "Flyweight minimizes memory usage by sharing data among similar objects."
+---
+
+## Pattern Information
+
+**Category:** Structural  
+**Difficulty:** 🔴 Advanced  
+
+---
+
+## What Is Flyweight?
+
+Flyweight reduces memory usage by **sharing** common data among many objects.
+
+<Callout type="definition">
+  **Flyweight** = Share common data to save memory.
+</Callout>
+
+---
+
+## JavaScript Example
+
+```js
+class TreeType {
+  constructor(name, color, texture) {
+    this.name = name;
+    this.color = color;
+    this.texture = texture;
+  }
+}
+
+class TreeFactory {
+  static types = {};
+  
+  static getType(name, color, texture) {
+    const key = name + color + texture;
+    if (!this.types[key]) {
+      this.types[key] = new TreeType(name, color, texture);
+    }
+    return this.types[key];
+  }
+}
+
+class Tree {
+  constructor(x, y, type) {
+    this.x = x;
+    this.y = y;
+    this.type = type; // Shared!
+  }
+}
+```
+
+---
+
+## When to Use
+
+✅ App uses huge numbers of objects  
+✅ Objects share common state  
+
+**Common:** Game graphics, text editors (character objects).
+
+---
+
+## One-Line Memory Trick
+
+**"Flyweight is like emoji — thousands of uses, but only one copy of each emoji in memory."**

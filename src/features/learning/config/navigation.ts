@@ -80,6 +80,139 @@ export const systemDesignNavigation: NavSection[] = [
             slug: "solid-principles",
             href: sd("design-patterns", "solid-principles"),
           },
+          {
+            title: "Introduction to Design Patterns",
+            slug: "introduction",
+            href: sd("design-patterns", "introduction"),
+          },
+        ],
+      },
+      {
+        title: "Creational Patterns",
+        color: "#10b981",
+        items: [
+          {
+            title: "Singleton",
+            slug: "singleton",
+            href: sd("design-patterns", "singleton"),
+          },
+          {
+            title: "Factory Method",
+            slug: "factory-method",
+            href: sd("design-patterns", "factory-method"),
+          },
+          {
+            title: "Builder",
+            slug: "builder",
+            href: sd("design-patterns", "builder"),
+          },
+          {
+            title: "Abstract Factory",
+            slug: "abstract-factory",
+            href: sd("design-patterns", "abstract-factory"),
+          },
+          {
+            title: "Prototype",
+            slug: "prototype",
+            href: sd("design-patterns", "prototype"),
+          },
+        ],
+      },
+      {
+        title: "Structural Patterns",
+        color: "#3b82f6",
+        items: [
+          {
+            title: "Adapter",
+            slug: "adapter",
+            href: sd("design-patterns", "adapter"),
+          },
+          {
+            title: "Facade",
+            slug: "facade",
+            href: sd("design-patterns", "facade"),
+          },
+          {
+            title: "Decorator",
+            slug: "decorator",
+            href: sd("design-patterns", "decorator"),
+          },
+          {
+            title: "Bridge",
+            slug: "bridge",
+            href: sd("design-patterns", "bridge"),
+          },
+          {
+            title: "Composite",
+            slug: "composite",
+            href: sd("design-patterns", "composite"),
+          },
+          {
+            title: "Flyweight",
+            slug: "flyweight",
+            href: sd("design-patterns", "flyweight"),
+          },
+          {
+            title: "Proxy",
+            slug: "proxy",
+            href: sd("design-patterns", "proxy"),
+          },
+        ],
+      },
+      {
+        title: "Behavioral Patterns",
+        color: "#a855f7",
+        items: [
+          {
+            title: "Strategy",
+            slug: "strategy",
+            href: sd("design-patterns", "strategy"),
+          },
+          {
+            title: "Observer",
+            slug: "observer",
+            href: sd("design-patterns", "observer"),
+          },
+          {
+            title: "Command",
+            slug: "command",
+            href: sd("design-patterns", "command"),
+          },
+          {
+            title: "Chain of Responsibility",
+            slug: "chain-of-responsibility",
+            href: sd("design-patterns", "chain-of-responsibility"),
+          },
+          {
+            title: "State",
+            slug: "state",
+            href: sd("design-patterns", "state"),
+          },
+          {
+            title: "Iterator",
+            slug: "iterator",
+            href: sd("design-patterns", "iterator"),
+          },
+          {
+            title: "Mediator",
+            slug: "mediator",
+            href: sd("design-patterns", "mediator"),
+          },
+          {
+            title: "Memento",
+            slug: "memento",
+            href: sd("design-patterns", "memento"),
+          },
+          {
+            title: "Template Method",
+            slug: "template-method",
+            href: sd("design-patterns", "template-method"),
+          },
+          {
+            title: "Visitor",
+            slug: "visitor",
+            href: sd("design-patterns", "visitor"),
+          },
         ],
       },
     ],

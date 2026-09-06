@@ -1,0 +1,697 @@
+---
+title: "Factory Method Pattern"
+description: "Define an interface for creating objects, but let subclasses decide which class to instantiate. Learn how Factory Method makes code more flexible and follows the Open/Closed Principle."
+difficulty: "beginner"
+readingTime: "14 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["creational", "factory-method", "beginner", "high-priority", "interview-important", "ocp"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["abstract-factory", "builder", "strategy"]
+summary: "Factory Method lets a class defer instantiation to subclasses. Instead of using 'new' directly, you call a method that creates the right object. This makes your code flexible and easy to extend."
+interviewQuestions:
+  - "What is the Factory Method pattern?"
+  - "Why would you use Factory Method instead of just using 'new'?"
+  - "How does Factory Method follow the Open/Closed Principle?"
+  - "What is the difference between Factory Method and Abstract Factory?"
+  - "Give a real-world example where Factory Method is useful."
+---
+
+## Pattern Information
+
+**Category:** Creational  
+**Difficulty:** 🟢 Beginner  
+**Priority:** High  
+**Commonly Used:** Yes  
+**Relevant To:** Backend, Frontend, JavaScript, TypeScript, Node.js, React
+
+---
+
+## What Is Factory Method?
+
+Factory Method is a creational pattern that provides an interface for creating objects, but lets **subclasses** or **implementations** decide which specific class to instantiate.
+
+Instead of writing:
+
+```js
+const obj = new ConcreteClass();
+```
+
+You write:
+
+```js
+const obj = factory.create();
+```
+
+The `create()` method (the "factory method") handles the creation logic, and different factories can create different types of objects.
+
+<Callout type="definition">
+  **Factory Method** = Let a method (the factory) decide which class to instantiate, instead of hard-coding `new ClassName()`.
+</Callout>
+
+---
+
+## Why Does This Pattern Exist?
+
+Imagine you are building a notification system. Right now, you send emails:
+
+```js
+class NotificationService {
+  send(message) {
+    const notification = new EmailNotification();
+    notification.send(message);
+  }
+}
+```
+
+This works. But tomorrow, the product manager says:
+
+> "We need SMS notifications too."
+
+You modify the code:
+
+```js
+class NotificationService {
+  send(message, type) {
+    let notification;
+    if (type === "email") {
+      notification = new EmailNotification();
+    } else if (type === "sms") {
+      notification = new SmsNotification();
+    }
+    notification.send(message);
+  }
+}
+```
+
+Now the PM says:
+
+> "Add push notifications."
+
+You add another `else if`. Then Slack notifications. Then WhatsApp.
+
+**The problem:**
+
+- Every new notification type requires **modifying** `NotificationService`.
+- This violates the **Open/Closed Principle** (OCP) — classes should be open for extension, closed for modification.
+- The class is tightly coupled to concrete implementations.
+
+Factory Method solves this.
+
+---
+
+## The Problem
+
+```js
+class PaymentProcessor {
+  process(amount, method) {
+    let payment;
+    
+    // Tight coupling to concrete classes
+    if (method === "creditcard") {
+      payment = new CreditCardPayment();
+    } else if (method === "paypal") {
+      payment = new PayPalPayment();
+    } else if (method === "crypto") {
+      payment = new CryptoPayment();
+    }
+    
+    payment.process(amount);
+  }
+}
+```
+
+**Problems:**
+
+1. **Rigid** — adding a new payment method means editing this class.
+2. **Coupled** — `PaymentProcessor` knows about every payment implementation.
+3. **Violates OCP** — not open for extension, requires modification.
+
+---
+
+## What Is Wrong With This Approach?
+
+- You cannot add new payment methods without editing existing code.
+- Every change risks breaking existing methods.
+- Testing becomes harder — you need all implementations available.
+- The class has too many responsibilities (payment processing + object creation).
+
+---
+
+## The Idea Behind the Pattern
+
+What if object creation was **delegated** to a separate method (or subclass)?
+
+The main class says:
+
+> "I need a payment object. I don't care which kind — someone else will create it."
+
+The factory method says:
+
+> "I will create the right one."
+
+This way:
+
+- The main class is **decoupled** from concrete implementations.
+- Adding new types means creating new factories, not editing existing code.
+- Follows the **Open/Closed Principle**.
+
+---
+
+## How Does It Work?
+
+### Step-by-Step
+
+1. Define a common interface (or base class) for products (e.g., `Payment`).
+2. Create concrete implementations (e.g., `CreditCardPayment`, `PayPalPayment`).
+3. Define a **factory method** that returns a product.
+4. Different factories return different products.
+5. The client code uses the factory method, not `new`.
+
+---
+
+## Structure
+
+```text
+              Client
+                 │
+                 │ calls
+                 ▼
+           ┌───────────┐
+           │  Creator  │
+           ├───────────┤
+           │ + create()│ ◄── Factory Method (returns Product)
+           │ + doSomething() │
+           └───────────┘
+                 △
+                 │ implements
+        ┌────────┴────────┐
+        │                 │
+ ┌─────────────┐   ┌─────────────┐
+ │ ConcreteA   │   │ ConcreteB   │
+ ├─────────────┤   ├─────────────┤
+ │ + create()  │   │ + create()  │
+ └─────────────┘   └─────────────┘
+        │                 │
+        │ creates         │ creates
+        ▼                 ▼
+ ┌────────────┐    ┌────────────┐
+ │ ProductA   │    │ ProductB   │
+ └────────────┘    └────────────┘
+```
+
+**Key parts:**
+
+- **Creator** — defines the factory method
+- **Concrete Creators** — implement the factory method to return specific products
+- **Product** — the interface all created objects share
+- **Concrete Products** — the actual objects created
+
+---
+
+## Simple Real-World Analogy
+
+Think of a **restaurant**.
+
+You (the customer) order "a burger." You do not go into the kitchen and assemble it yourself.
+
+The kitchen (the factory) decides:
+
+- Is it a beef burger?
+- Is it a veggie burger?
+- Is it a chicken burger?
+
+You just get a burger. The type is handled by the kitchen based on your order.
+
+Similarly, your code says "give me a notification" and the factory decides whether it's email, SMS, or push.
+
+---
+
+## TypeScript Example
+
+### Step 1: Define the Product Interface
+
+```ts
+// The product interface
+interface Notification {
+  send(message: string): void;
+}
+```
+
+### Step 2: Create Concrete Products
+
+```ts
+class EmailNotification implements Notification {
+  send(message: string): void {
+    console.log(`Sending email: ${message}`);
+  }
+}
+
+class SmsNotification implements Notification {
+  send(message: string): void {
+    console.log(`Sending SMS: ${message}`);
+  }
+}
+
+class PushNotification implements Notification {
+  send(message: string): void {
+    console.log(`Sending push notification: ${message}`);
+  }
+}
+```
+
+### Step 3: Define the Creator (Factory)
+
+```ts
+abstract class NotificationFactory {
+  // Factory method — subclasses implement this
+  abstract createNotification(): Notification;
+
+  // Business logic uses the factory method
+  send(message: string): void {
+    const notification = this.createNotification();
+    notification.send(message);
+  }
+}
+```
+
+### Step 4: Create Concrete Factories
+
+```ts
+class EmailNotificationFactory extends NotificationFactory {
+  createNotification(): Notification {
+    return new EmailNotification();
+  }
+}
+
+class SmsNotificationFactory extends NotificationFactory {
+  createNotification(): Notification {
+    return new SmsNotification();
+  }
+}
+
+class PushNotificationFactory extends NotificationFactory {
+  createNotification(): Notification {
+    return new PushNotification();
+  }
+}
+```
+
+### Step 5: Use the Factories
+
+```ts
+// Client code
+function sendNotification(factory: NotificationFactory, message: string) {
+  factory.send(message);
+}
+
+// Usage
+sendNotification(new EmailNotificationFactory(), "Welcome!");
+// Sending email: Welcome!
+
+sendNotification(new SmsNotificationFactory(), "Your code is 1234");
+// Sending SMS: Your code is 1234
+
+sendNotification(new PushNotificationFactory(), "New message");
+// Sending push notification: New message
+```
+
+**What happened:**
+
+- The client code never calls `new EmailNotification()`.
+- It uses the factory method.
+- Adding a new notification type (e.g., WhatsApp) means creating a new factory — no existing code changes.
+
+---
+
+## Simpler JavaScript Version
+
+You do not always need abstract classes. A simple function can act as a factory:
+
+```js
+// Factory function
+function createNotification(type) {
+  if (type === "email") {
+    return {
+      send(message) {
+        console.log(`Email: ${message}`);
+      },
+    };
+  } else if (type === "sms") {
+    return {
+      send(message) {
+        console.log(`SMS: ${message}`);
+      },
+    };
+  } else if (type === "push") {
+    return {
+      send(message) {
+        console.log(`Push: ${message}`);
+      },
+    };
+  }
+  throw new Error("Unknown notification type");
+}
+
+// Usage
+const notification = createNotification("email");
+notification.send("Hello!"); // Email: Hello!
+```
+
+This is a lightweight Factory Method.
+
+<Callout type="remember">
+  In JavaScript, you do not always need classes and inheritance. A simple function can be a factory.
+</Callout>
+
+---
+
+## How the Pattern Solves the Problem
+
+| Before (Direct `new`) | After (Factory Method) |
+|---|---|
+| Hard-coded `new ClassName()` | Factory method returns the object |
+| Adding types requires editing existing code | Adding types means creating new factories |
+| Tight coupling to concrete classes | Decoupled — depends on interfaces |
+| Violates Open/Closed Principle | Follows Open/Closed Principle |
+
+---
+
+## Advantages
+
+✅ **Decoupling** — client code does not depend on concrete classes  
+✅ **Open/Closed Principle** — add new types without modifying existing code  
+✅ **Single Responsibility** — object creation logic is separated  
+✅ **Testability** — easy to mock factories in tests  
+✅ **Flexibility** — swap implementations at runtime
+
+---
+
+## Disadvantages
+
+⚠️ **More classes** — you need a factory for each product type  
+⚠️ **Complexity** — simple cases can become over-engineered  
+⚠️ **Indirection** — harder to trace where objects are actually created
+
+<Callout type="tip">
+  Use Factory Method when you need flexibility. For simple cases, `new` is fine.
+</Callout>
+
+---
+
+## When Should I Use It?
+
+Use Factory Method when:
+
+✅ You do not know the exact class you need until runtime  
+✅ You want to decouple object creation from usage  
+✅ You need to follow the Open/Closed Principle  
+✅ Object creation logic is complex or varies  
+✅ You want to centralize instantiation logic
+
+**Common use cases:**
+
+- Creating different types of database connections (MySQL, Postgres, Mongo)
+- Generating different file parsers (JSON, XML, CSV)
+- Building different UI components based on platform (iOS, Android, Web)
+- Payment processing (Stripe, PayPal, Crypto)
+
+---
+
+## When Should I NOT Use It?
+
+Avoid Factory Method when:
+
+❌ You only have one concrete class — just use `new`  
+❌ The creation logic is trivial  
+❌ You are adding unnecessary abstraction  
+
+```js
+// ❌ Overengineered for one class
+class UserFactory {
+  createUser(name) {
+    return new User(name);
+  }
+}
+
+// ✅ Just use new
+const user = new User("Alice");
+```
+
+---
+
+## Real-World Examples
+
+### 1. Database Connection Factory (Node.js)
+
+```ts
+interface Database {
+  connect(): void;
+  query(sql: string): any;
+}
+
+class MySQLDatabase implements Database {
+  connect() { console.log("Connected to MySQL"); }
+  query(sql: string) { return "MySQL result"; }
+}
+
+class PostgresDatabase implements Database {
+  connect() { console.log("Connected to Postgres"); }
+  query(sql: string) { return "Postgres result"; }
+}
+
+class MongoDatabase implements Database {
+  connect() { console.log("Connected to MongoDB"); }
+  query(sql: string) { return "MongoDB result"; }
+}
+
+// Factory
+function createDatabase(type: string): Database {
+  if (type === "mysql") return new MySQLDatabase();
+  if (type === "postgres") return new PostgresDatabase();
+  if (type === "mongo") return new MongoDatabase();
+  throw new Error("Unknown database type");
+}
+
+// Usage
+const dbType = process.env.DB_TYPE || "postgres";
+const db = createDatabase(dbType);
+db.connect();
+```
+
+---
+
+### 2. Logger Factory
+
+```ts
+interface Logger {
+  log(message: string): void;
+}
+
+class ConsoleLogger implements Logger {
+  log(message: string) {
+    console.log(`[Console] ${message}`);
+  }
+}
+
+class FileLogger implements Logger {
+  log(message: string) {
+    // Write to file
+    console.log(`[File] ${message}`);
+  }
+}
+
+class CloudLogger implements Logger {
+  log(message: string) {
+    // Send to cloud service
+    console.log(`[Cloud] ${message}`);
+  }
+}
+
+function createLogger(env: string): Logger {
+  if (env === "development") return new ConsoleLogger();
+  if (env === "production") return new CloudLogger();
+  return new FileLogger();
+}
+
+const logger = createLogger(process.env.NODE_ENV || "development");
+logger.log("App started");
+```
+
+---
+
+### 3. Payment Processor
+
+```ts
+interface PaymentMethod {
+  pay(amount: number): void;
+}
+
+class CreditCardPayment implements PaymentMethod {
+  pay(amount: number) {
+    console.log(`Paid $${amount} via Credit Card`);
+  }
+}
+
+class PayPalPayment implements PaymentMethod {
+  pay(amount: number) {
+    console.log(`Paid $${amount} via PayPal`);
+  }
+}
+
+class CryptoPayment implements PaymentMethod {
+  pay(amount: number) {
+    console.log(`Paid $${amount} via Crypto`);
+  }
+}
+
+function createPaymentMethod(type: string): PaymentMethod {
+  if (type === "card") return new CreditCardPayment();
+  if (type === "paypal") return new PayPalPayment();
+  if (type === "crypto") return new CryptoPayment();
+  throw new Error("Unknown payment type");
+}
+
+// Usage
+const paymentType = "paypal";
+const payment = createPaymentMethod(paymentType);
+payment.pay(100);
+```
+
+---
+
+## Common Mistakes
+
+### Mistake 1: Factory with only one product
+
+```js
+// ❌ Unnecessary
+class UserFactory {
+  create(name) {
+    return new User(name);
+  }
+}
+
+// ✅ Just use new
+const user = new User("Alice");
+```
+
+---
+
+### Mistake 2: Too many conditionals in factory
+
+```js
+// ❌ This is becoming unmanageable
+function createTransport(type) {
+  if (type === "car") return new Car();
+  else if (type === "bike") return new Bike();
+  else if (type === "train") return new Train();
+  else if (type === "plane") return new Plane();
+  // 50 more else-ifs...
+}
+```
+
+**Better:** Use a registry or Strategy pattern.
+
+```js
+const transportRegistry = {
+  car: () => new Car(),
+  bike: () => new Bike(),
+  train: () => new Train(),
+  plane: () => new Plane(),
+};
+
+function createTransport(type) {
+  const factory = transportRegistry[type];
+  if (!factory) throw new Error("Unknown type");
+  return factory();
+}
+```
+
+---
+
+## Common Misconceptions
+
+### "Factory Method is the same as a simple factory function"
+
+Close, but not exactly. The **Factory Method pattern** involves inheritance and polymorphism. A **simple factory** is just a function. Both are valid — use the one that fits your needs.
+
+### "Factory Method eliminates all use of `new`"
+
+No. The factory method still uses `new` internally. The point is to **encapsulate** the creation logic, not eliminate `new`.
+
+---
+
+## Related SOLID Principles
+
+### Open/Closed Principle (OCP)
+
+✅ **Factory Method is a direct application of OCP.**
+
+- Open for extension: add new product types by creating new factories.
+- Closed for modification: existing code does not change.
+
+### Dependency Inversion Principle (DIP)
+
+✅ Client code depends on the `Product` interface, not concrete implementations.
+
+---
+
+## Related Design Patterns
+
+### Abstract Factory
+
+**Difference:** Factory Method creates **one product**. Abstract Factory creates **families of related products**.
+
+### Builder
+
+Both are creational patterns. Builder is for constructing complex objects step-by-step. Factory Method is for deciding which class to instantiate.
+
+### Strategy
+
+Both allow swapping implementations. Strategy swaps algorithms; Factory Method swaps object types.
+
+---
+
+## Interview Questions
+
+**Q1: What is the Factory Method pattern?**  
+A: A creational pattern that defines an interface for creating objects but lets subclasses or factory implementations decide which class to instantiate.
+
+**Q2: Why use Factory Method instead of `new`?**  
+A: To decouple object creation from usage, follow the Open/Closed Principle, and make the code flexible and testable.
+
+**Q3: How does Factory Method follow OCP?**  
+A: You can add new product types by creating new factories, without modifying existing code.
+
+**Q4: What is the difference between Factory Method and Abstract Factory?**  
+A: Factory Method creates one product. Abstract Factory creates families of related products.
+
+**Q5: Give a real-world example.**  
+A: A payment system where different factories create different payment methods (CreditCard, PayPal, Crypto) based on user input.
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "Factory Method is a creational pattern where object creation is delegated to a method or subclass. Instead of hard-coding `new ClassName()`, you call a factory method that returns the right object. This decouples your code from concrete implementations, follows the Open/Closed Principle, and makes it easy to add new types without changing existing code. It's commonly used for payment systems, database connections, and notification services."
+
+---
+
+## Quick Revision
+
+- Factory Method **delegates object creation** to a method.
+- Client code calls the factory method, not `new`.
+- Follows the **Open/Closed Principle**.
+- Decouples code from concrete implementations.
+- **When to use:** multiple types, flexible creation, runtime decisions.
+- **When NOT to use:** only one product, trivial creation.
+- Common in: **payments, databases, notifications, logging**.
+- **TypeScript:** use interfaces and factory classes.
+- **JavaScript:** a simple function can be a factory.
+
+---
+
+## One-Line Memory Trick
+
+**"Factory Method is like a restaurant kitchen — you order 'a burger,' the kitchen decides what kind."**

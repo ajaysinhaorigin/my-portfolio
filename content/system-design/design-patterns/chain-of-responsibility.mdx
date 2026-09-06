@@ -1,0 +1,189 @@
+---
+title: "Chain of Responsibility Pattern"
+description: "Avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it."
+difficulty: "intermediate"
+readingTime: "11 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["behavioral", "chain-of-responsibility", "intermediate", "high-priority", "interview-important"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["command", "decorator"]
+summary: "Chain of Responsibility passes a request along a chain of handlers. Each handler decides to process the request or pass it to the next handler."
+interviewQuestions:
+  - "What is the Chain of Responsibility pattern?"
+  - "When would you use Chain of Responsibility?"
+  - "What's the difference between Chain of Responsibility and Decorator?"
+---
+
+## Pattern Information
+
+**Category:** Behavioral  
+**Difficulty:** 🟡 Intermediate  
+**Priority:** High  
+**Commonly Used:** Yes  
+**Relevant To:** Backend, Frontend, Middleware, Event Handling
+
+---
+
+## What Is Chain of Responsibility?
+
+Chain of Responsibility passes a request through a chain of handlers. Each handler decides whether to process the request or pass it to the next handler.
+
+<Callout type="definition">
+  **Chain of Responsibility** = Pass requests along a chain until someone handles it.
+</Callout>
+
+---
+
+## Why Does This Pattern Exist?
+
+Support ticket system with multiple levels:
+
+**Without Chain:**
+
+```ts
+function handleTicket(ticket: Ticket) {
+  if (ticket.type === 'billing') {
+    billingDept.handle(ticket);
+  } else if (ticket.type === 'technical') {
+    techDept.handle(ticket);
+  } else if (ticket.type === 'general') {
+    generalDept.handle(ticket);
+  }
+}
+```
+
+**With Chain:**
+
+```ts
+const chain = billingHandler
+  .setNext(techHandler)
+  .setNext(generalHandler);
+
+chain.handle(ticket); // Passes through chain automatically
+```
+
+---
+
+## TypeScript Example
+
+```ts
+abstract class Handler {
+  private nextHandler?: Handler;
+
+  setNext(handler: Handler): Handler {
+    this.nextHandler = handler;
+    return handler;
+  }
+
+  handle(request: string): string | null {
+    if (this.nextHandler) {
+      return this.nextHandler.handle(request);
+    }
+    return null;
+  }
+}
+
+class BillingHandler extends Handler {
+  handle(request: string): string | null {
+    if (request === 'billing') {
+      return 'Billing department handled';
+    }
+    return super.handle(request);
+  }
+}
+
+class TechnicalHandler extends Handler {
+  handle(request: string): string | null {
+    if (request === 'technical') {
+      return 'Tech support handled';
+    }
+    return super.handle(request);
+  }
+}
+
+// Usage
+const chain = new BillingHandler();
+chain.setNext(new TechnicalHandler());
+
+console.log(chain.handle('billing'));    // Billing department handled
+console.log(chain.handle('technical'));  // Tech support handled
+```
+
+---
+
+## Real-World Example: Express Middleware
+
+```js
+function auth(req, res, next) {
+  if (req.headers.authorization) {
+    next(); // Pass to next handler
+  } else {
+    res.status(401).send('Unauthorized');
+  }
+}
+
+function logger(req, res, next) {
+  console.log(`${req.method} ${req.url}`);
+  next();
+}
+
+app.use(logger);
+app.use(auth);
+app.get('/api/data', handler);
+```
+
+---
+
+## Advantages
+
+✅ **Decouples** sender from receiver  
+✅ **Flexible** — add/remove handlers dynamically  
+✅ **Single Responsibility** — each handler has one job  
+
+---
+
+## Disadvantages
+
+⚠️ **No guarantee** request will be handled  
+⚠️ **Hard to debug** — request travels through chain  
+
+---
+
+## When Should I Use It?
+
+Use Chain of Responsibility when:
+
+✅ Multiple objects can handle a request  
+✅ The handler isn't known in advance  
+✅ You want to issue requests to multiple objects without specifying the receiver  
+
+**Common use cases:**
+
+- Middleware (Express, Koa)
+- Event bubbling (DOM)
+- Logging frameworks
+- Validation chains
+- Error handling
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "Chain of Responsibility is a behavioral pattern where a request passes through a chain of handlers. Each handler decides to process the request or pass it to the next handler. This decouples the sender from the receiver. It's commonly used in middleware systems like Express—each middleware can handle the request or call next(). The main benefit is flexibility—you can add, remove, or reorder handlers dynamically."
+
+---
+
+## Quick Revision
+
+- Passes request **through a chain**  
+- Each handler **processes or forwards**  
+- **Decouples** sender from receiver  
+- Common in: **middleware, event handling**  
+- Similar to **Decorator** but focuses on responsibility delegation  
+
+---
+
+## One-Line Memory Trick
+
+**"Chain of Responsibility is like escalating a support ticket — passes through levels until someone handles it."**

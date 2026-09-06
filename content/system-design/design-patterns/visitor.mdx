@@ -1,0 +1,80 @@
+---
+title: "Visitor Pattern"
+description: "Represent an operation to be performed on elements of an object structure. Visitor lets you define a new operation without changing the classes of the elements on which it operates."
+difficulty: "advanced"
+readingTime: "11 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["behavioral", "visitor", "advanced"]
+prerequisites: ["oop"]
+relatedTopics: ["composite"]
+summary: "Visitor lets you add new operations to existing object structures without modifying them."
+---
+
+## Pattern Information
+
+**Category:** Behavioral  
+**Difficulty:** 🔴 Advanced  
+
+---
+
+## What Is Visitor?
+
+Visitor lets you add **new operations** to object structures without modifying them.
+
+<Callout type="definition">
+  **Visitor** = Add operations without modifying classes.
+</Callout>
+
+---
+
+## TypeScript Example
+
+```ts
+interface Visitor {
+  visitCircle(circle: Circle): void;
+  visitSquare(square: Square): void;
+}
+
+class AreaCalculator implements Visitor {
+  visitCircle(circle: Circle) {
+    console.log(\`Circle area: \${Math.PI * circle.radius ** 2}\`);
+  }
+  
+  visitSquare(square: Square) {
+    console.log(\`Square area: \${square.side ** 2}\`);
+  }
+}
+
+interface Shape {
+  accept(visitor: Visitor): void;
+}
+
+class Circle implements Shape {
+  constructor(public radius: number) {}
+  
+  accept(visitor: Visitor) {
+    visitor.visitCircle(this);
+  }
+}
+
+// Usage
+const circle = new Circle(5);
+const calculator = new AreaCalculator();
+circle.accept(calculator);
+```
+
+---
+
+## When to Use
+
+✅ You need to perform operations on different object types  
+✅ Operations change frequently but object structure is stable  
+
+**Common:** Compilers (AST traversal), file system operations.
+
+---
+
+## One-Line Memory Trick
+
+**"Visitor is like a health inspector — visits different establishments, performs inspections without changing them."**

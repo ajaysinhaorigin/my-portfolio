@@ -1,0 +1,67 @@
+---
+title: "Abstract Factory Pattern"
+description: "Provide an interface for creating families of related or dependent objects without specifying their concrete classes."
+difficulty: "intermediate"
+readingTime: "12 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["creational", "abstract-factory", "intermediate"]
+prerequisites: ["oop", "factory-method"]
+relatedTopics: ["factory-method", "builder"]
+summary: "Abstract Factory creates families of related objects without specifying their concrete classes."
+---
+
+## Pattern Information
+
+**Category:** Creational  
+**Difficulty:** 🟡 Intermediate  
+**Commonly Used:** Moderate  
+
+---
+
+## What Is Abstract Factory?
+
+Abstract Factory creates **families of related objects** without specifying their concrete classes.
+
+<Callout type="definition">
+  **Abstract Factory** = Create families of related objects.
+</Callout>
+
+---
+
+## TypeScript Example
+
+```ts
+interface Button { render(): void; }
+interface Checkbox { render(): void; }
+
+interface GUIFactory {
+  createButton(): Button;
+  createCheckbox(): Checkbox;
+}
+
+class WindowsFactory implements GUIFactory {
+  createButton(): Button { return new WindowsButton(); }
+  createCheckbox(): Checkbox { return new WindowsCheckbox(); }
+}
+
+class MacFactory implements GUIFactory {
+  createButton(): Button { return new MacButton(); }
+  createCheckbox(): Checkbox { return new MacCheckbox(); }
+}
+```
+
+---
+
+## When to Use
+
+✅ System should be independent of how products are created  
+✅ System needs multiple families of related products  
+
+**Common:** UI component libraries, database drivers.
+
+---
+
+## One-Line Memory Trick
+
+**"Abstract Factory is like a furniture store — creates families of related products (sofa, chair, table)."**

@@ -1,0 +1,657 @@
+---
+title: "Singleton Pattern"
+description: "Ensure a class has only one instance and provide a global point of access to it. Learn when to use Singleton, when to avoid it, and why it's considered controversial."
+difficulty: "beginner"
+readingTime: "12 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["creational", "singleton", "beginner", "high-priority", "interview-important"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["dependency-injection", "factory-method"]
+summary: "The Singleton pattern restricts a class to a single instance and provides global access to it. It's one of the simplest patterns but also one of the most misused."
+interviewQuestions:
+  - "What is the Singleton pattern?"
+  - "Why would you use a Singleton?"
+  - "What are the problems with Singleton?"
+  - "How do you implement thread-safe Singleton in JavaScript?"
+  - "What is the difference between Singleton and static class?"
+  - "Why is Singleton considered an anti-pattern by some developers?"
+---
+
+## Pattern Information
+
+**Category:** Creational  
+**Difficulty:** 🟢 Beginner  
+**Priority:** High  
+**Commonly Used:** Yes  
+**Relevant To:** Backend, Frontend, JavaScript, TypeScript, Node.js
+
+---
+
+## What Is Singleton?
+
+The Singleton pattern ensures that a class has **only one instance** throughout the entire application lifetime, and provides a **global point of access** to that instance.
+
+No matter how many times you try to create the object, you always get the same instance back.
+
+<Callout type="definition">
+  **Singleton** = One instance, shared everywhere.
+</Callout>
+
+---
+
+## Why Does This Pattern Exist?
+
+Sometimes, having multiple instances of a class creates problems:
+
+- **Database connections** — you do not want 50 different connection objects
+- **Configuration objects** — you want one source of truth
+- **Logging services** — all parts of your app should log to the same place
+- **Cache managers** — one shared cache, not multiple competing caches
+
+These are situations where you want **exactly one instance**, shared across the entire application.
+
+---
+
+## The Problem
+
+Let's say you have a `DatabaseConnection` class.
+
+```js
+class DatabaseConnection {
+  constructor() {
+    console.log("Creating new database connection...");
+    this.connection = this.connect();
+  }
+
+  connect() {
+    // Expensive operation: open TCP connection to database
+    return { host: "localhost", connected: true };
+  }
+
+  query(sql) {
+    return this.connection.query(sql);
+  }
+}
+
+// Different parts of your app create instances
+const db1 = new DatabaseConnection(); // Creating new database connection...
+const db2 = new DatabaseConnection(); // Creating new database connection...
+const db3 = new DatabaseConnection(); // Creating new database connection...
+
+console.log(db1 === db2); // false — they are different objects
+```
+
+**Problems:**
+
+1. Every `new DatabaseConnection()` creates a separate connection.
+2. Opening database connections is expensive (TCP handshake, authentication).
+3. Most databases limit the number of connections.
+4. You end up with multiple connections when you only needed one.
+
+---
+
+## What Is Wrong With This Approach?
+
+- **Wasted resources** — multiple connections when one would work
+- **No coordination** — each instance is independent
+- **Hard to manage** — no single place to close connections or change config
+
+This is inefficient and error-prone.
+
+---
+
+## The Idea Behind the Pattern
+
+What if the class itself controlled how many instances exist?
+
+Instead of letting anyone create instances with `new`, the class:
+
+1. **Hides the constructor** — you cannot call `new` from outside
+2. **Stores one instance internally**
+3. **Provides a method to get that instance** — if it exists, return it; if not, create it
+
+This way, no matter how many times you ask for an instance, you always get the same one.
+
+---
+
+## How Does It Work?
+
+### Step-by-Step
+
+1. Make the constructor private (or prevent multiple calls)
+2. Create a static variable to store the single instance
+3. Provide a static method (e.g., `getInstance()`) that:
+   - Returns the existing instance if it exists
+   - Creates a new instance if it doesn't exist
+   - Returns that instance
+
+---
+
+## Structure
+
+```text
+┌─────────────────────────┐
+│      Singleton          │
+├─────────────────────────┤
+│ - instance (static)     │  ← stores the one instance
+├─────────────────────────┤
+│ - constructor()         │  ← private/controlled
+│ + getInstance()         │  ← public access point
+│ + businessMethod()      │
+└─────────────────────────┘
+           ▲
+           │
+    Always returns
+    the same instance
+```
+
+**Key points:**
+
+- The instance is stored as a **static** property
+- The constructor is private or controlled
+- `getInstance()` is the only way to access the instance
+
+---
+
+## Simple Real-World Analogy
+
+Think of a **country's president**.
+
+At any given time, there is only **one president**. No matter who you ask, "Who is the president?", everyone points to the same person.
+
+You do not "create" multiple presidents — the position is a Singleton.
+
+Another analogy: Your **laptop's operating system**. There is one OS instance running, shared by all programs.
+
+---
+
+## TypeScript Example
+
+```ts
+class DatabaseConnection {
+  private static instance: DatabaseConnection | null = null;
+  private connection: any;
+
+  // Private constructor — cannot call `new DatabaseConnection()` from outside
+  private constructor() {
+    console.log("Creating database connection...");
+    this.connection = this.connect();
+  }
+
+  private connect() {
+    // Simulate expensive connection
+    return { host: "localhost", port: 5432, connected: true };
+  }
+
+  // Public method to get the single instance
+  public static getInstance(): DatabaseConnection {
+    if (DatabaseConnection.instance === null) {
+      DatabaseConnection.instance = new DatabaseConnection();
+    }
+    return DatabaseConnection.instance;
+  }
+
+  public query(sql: string) {
+    console.log(`Executing: ${sql}`);
+    return this.connection;
+  }
+}
+
+// Usage
+const db1 = DatabaseConnection.getInstance(); // Creating database connection...
+const db2 = DatabaseConnection.getInstance(); // (no log — reuses existing instance)
+const db3 = DatabaseConnection.getInstance();
+
+console.log(db1 === db2); // true
+console.log(db2 === db3); // true
+
+// This would throw an error (private constructor):
+// const db4 = new DatabaseConnection(); ❌
+```
+
+**What happens:**
+
+1. First call to `getInstance()` creates the instance
+2. Subsequent calls return the same instance
+3. No matter where you call it, you always get the same object
+
+---
+
+## JavaScript Version (Without TypeScript)
+
+JavaScript does not have `private` constructors (in older versions), but you can simulate the pattern:
+
+```js
+class Logger {
+  constructor() {
+    if (Logger.instance) {
+      return Logger.instance; // Return existing instance if it exists
+    }
+    this.logs = [];
+    Logger.instance = this; // Store the instance
+  }
+
+  log(message) {
+    this.logs.push({ message, timestamp: new Date() });
+    console.log(message);
+  }
+
+  getLogs() {
+    return this.logs;
+  }
+}
+
+const logger1 = new Logger();
+const logger2 = new Logger();
+
+logger1.log("Event A");
+logger2.log("Event B");
+
+console.log(logger1.getLogs()); // [Event A, Event B]
+console.log(logger1 === logger2); // true
+```
+
+**How it works:**
+
+- The constructor checks if `Logger.instance` already exists
+- If yes, it returns that instead of creating a new object
+- This ensures only one instance exists
+
+---
+
+## Modern JavaScript Alternative: Module Pattern
+
+In modern JavaScript (Node.js, ES Modules), you often do not need the Singleton class pattern at all.
+
+Modules themselves are singletons — they are only loaded once.
+
+```js
+// database.js
+class DatabaseConnection {
+  constructor() {
+    console.log("Creating database connection...");
+    this.connection = { host: "localhost", connected: true };
+  }
+
+  query(sql) {
+    console.log(`Executing: ${sql}`);
+  }
+}
+
+// Export a single instance
+export const db = new DatabaseConnection();
+```
+
+```js
+// fileA.js
+import { db } from "./database.js";
+db.query("SELECT * FROM users");
+
+// fileB.js
+import { db } from "./database.js";
+db.query("INSERT INTO logs ...");
+```
+
+Both `fileA` and `fileB` get the **same `db` instance** because modules are cached.
+
+<Callout type="tip">
+  In Node.js and modern frontend frameworks, exporting a single instance from a module is often simpler and cleaner than implementing the Singleton pattern manually.
+</Callout>
+
+---
+
+## How the Pattern Solves the Problem
+
+| Before (Multiple Instances) | After (Singleton) |
+|---|---|
+| Each `new` creates a separate object | Only one instance exists |
+| Wasted resources (connections, memory) | Resources are shared efficiently |
+| Hard to coordinate state | One instance = one source of truth |
+| Multiple configurations | Single configuration object |
+
+---
+
+## Advantages
+
+✅ **Controlled access** — only one instance exists  
+✅ **Global access point** — available everywhere in the app  
+✅ **Lazy initialization** — instance is created only when first requested  
+✅ **Memory efficient** — no duplicate instances  
+✅ **Shared state** — all parts of the app use the same object
+
+---
+
+## Disadvantages
+
+⚠️ **Global state** — Singletons introduce global mutable state, which can make code harder to test and reason about  
+⚠️ **Hidden dependencies** — classes using Singletons have hidden dependencies (not visible in constructor)  
+⚠️ **Difficult to test** — mocking a Singleton is harder than injecting a dependency  
+⚠️ **Violates Single Responsibility Principle** — the class manages both its own logic AND its instance lifecycle  
+⚠️ **Concurrency issues** — in multi-threaded environments, Singleton requires careful synchronization  
+
+<Callout type="remember">
+  Many experienced developers consider Singleton an **anti-pattern** because it introduces global state and tight coupling. Use it sparingly.
+</Callout>
+
+---
+
+## When Should I Use It?
+
+Use Singleton when:
+
+✅ You need **exactly one instance** of a class  
+✅ That instance must be **accessible globally**  
+✅ The instance manages a **shared resource** (database connection, cache, config)  
+✅ Creating multiple instances would cause problems (resource waste, inconsistent state)
+
+Common valid use cases:
+
+- **Logger** — one logging service for the entire app
+- **Configuration manager** — one config object
+- **Database connection pool** — one pool managing connections
+- **Cache manager** — one shared cache
+
+---
+
+## When Should I NOT Use It?
+
+Avoid Singleton when:
+
+❌ You can achieve the same result with **Dependency Injection**  
+❌ You need to **test** the class easily (Singleton makes testing harder)  
+❌ The class does **not manage a shared resource**  
+❌ You are using it just to avoid passing objects around  
+
+<Callout type="tip">
+  **Modern alternative:** Instead of Singleton, consider **Dependency Injection** with a single instance managed by a container (like NestJS's DI system). This gives you the benefits of Singleton without the downsides.
+</Callout>
+
+---
+
+## Real-World Examples
+
+### 1. Configuration Manager (Node.js)
+
+```ts
+class Config {
+  private static instance: Config;
+  private settings: Record<string, any>;
+
+  private constructor() {
+    // Load config from environment or file
+    this.settings = {
+      apiUrl: process.env.API_URL || "http://localhost:3000",
+      dbHost: process.env.DB_HOST || "localhost",
+      port: process.env.PORT || 3000,
+    };
+  }
+
+  public static getInstance(): Config {
+    if (!Config.instance) {
+      Config.instance = new Config();
+    }
+    return Config.instance;
+  }
+
+  public get(key: string): any {
+    return this.settings[key];
+  }
+}
+
+// Usage across your app
+const config = Config.getInstance();
+console.log(config.get("apiUrl"));
+```
+
+---
+
+### 2. Application Logger
+
+```ts
+class Logger {
+  private static instance: Logger;
+  private logs: Array<{ level: string; message: string; timestamp: Date }> = [];
+
+  private constructor() {}
+
+  public static getInstance(): Logger {
+    if (!Logger.instance) {
+      Logger.instance = new Logger();
+    }
+    return Logger.instance;
+  }
+
+  public info(message: string) {
+    this.log("INFO", message);
+  }
+
+  public error(message: string) {
+    this.log("ERROR", message);
+  }
+
+  private log(level: string, message: string) {
+    const entry = { level, message, timestamp: new Date() };
+    this.logs.push(entry);
+    console.log(`[${level}] ${message}`);
+  }
+
+  public getLogs() {
+    return this.logs;
+  }
+}
+
+// Usage
+const logger = Logger.getInstance();
+logger.info("App started");
+logger.error("Something failed");
+```
+
+---
+
+### 3. Database Connection Pool
+
+```ts
+class ConnectionPool {
+  private static instance: ConnectionPool;
+  private pool: any;
+
+  private constructor() {
+    // Create connection pool (expensive operation)
+    this.pool = this.createPool();
+  }
+
+  private createPool() {
+    return {
+      connections: [],
+      maxConnections: 10,
+    };
+  }
+
+  public static getInstance(): ConnectionPool {
+    if (!ConnectionPool.instance) {
+      ConnectionPool.instance = new ConnectionPool();
+    }
+    return ConnectionPool.instance;
+  }
+
+  public getConnection() {
+    return this.pool.connections[0] || "new connection";
+  }
+}
+
+// Usage
+const pool = ConnectionPool.getInstance();
+const conn = pool.getConnection();
+```
+
+---
+
+## Common Mistakes
+
+### Mistake 1: Using Singleton for Everything
+
+```js
+// ❌ Bad — this does not need to be a Singleton
+class MathHelper {
+  static instance = null;
+  static getInstance() {
+    if (!MathHelper.instance) {
+      MathHelper.instance = new MathHelper();
+    }
+    return MathHelper.instance;
+  }
+
+  add(a, b) {
+    return a + b;
+  }
+}
+
+// ✅ Good — just use a regular function or class
+function add(a, b) {
+  return a + b;
+}
+```
+
+**Rule:** Only use Singleton if you need **shared state** or **one shared resource**.
+
+---
+
+### Mistake 2: Making Testing Harder
+
+```js
+class ApiClient {
+  static instance = null;
+  static getInstance() { /* ... */ }
+
+  fetch(url) {
+    return realHttpCall(url); // Hard to mock
+  }
+}
+
+// In tests, you cannot easily replace ApiClient with a mock
+```
+
+**Better approach:** Use Dependency Injection so you can inject a mock in tests.
+
+---
+
+### Mistake 3: Hidden Dependencies
+
+```js
+class UserService {
+  getUser(id) {
+    const db = DatabaseConnection.getInstance(); // Hidden dependency
+    return db.query(`SELECT * FROM users WHERE id = ${id}`);
+  }
+}
+```
+
+**Problem:** Looking at `UserService`, you do not know it depends on `DatabaseConnection`. This makes the code harder to understand and test.
+
+**Better:** Inject the database as a dependency:
+
+```js
+class UserService {
+  constructor(db) {
+    this.db = db;
+  }
+
+  getUser(id) {
+    return this.db.query(`SELECT * FROM users WHERE id = ${id}`);
+  }
+}
+```
+
+---
+
+## Common Misconceptions
+
+### Misconception 1: "Singleton and static class are the same"
+
+No. A static class has only static methods and no instance. A Singleton is an instance, but only one instance exists.
+
+### Misconception 2: "Singleton is always bad"
+
+Not always. It has valid use cases (logger, config). The problem is **overuse**.
+
+### Misconception 3: "Singleton prevents multiple instances automatically"
+
+Not in JavaScript (unless you implement it correctly). Without the pattern, JavaScript allows unlimited `new` calls.
+
+---
+
+## Related SOLID Principles
+
+### Single Responsibility Principle (SRP)
+
+⚠️ **Singleton often violates SRP** because the class has two responsibilities:
+
+1. Its business logic (e.g., database operations)
+2. Managing its own lifecycle (ensuring only one instance)
+
+This is one reason some developers dislike the pattern.
+
+### Dependency Inversion Principle (DIP)
+
+✅ **Alternative to Singleton:** Use Dependency Injection with a single instance managed by a DI container. This follows DIP and avoids the downsides of Singleton.
+
+---
+
+## Related Design Patterns
+
+### Factory Method
+
+Both Factory Method and Singleton control object creation. A Factory can return a Singleton instance.
+
+### Dependency Injection
+
+Modern alternative to Singleton. The DI container manages a single instance, but you inject it explicitly rather than accessing it globally.
+
+---
+
+## Interview Questions
+
+**Q1: What is the Singleton pattern?**  
+A: A pattern that ensures a class has only one instance and provides a global point of access to it.
+
+**Q2: Why would you use a Singleton?**  
+A: When you need exactly one instance of a class that manages a shared resource, like a logger, config, or database connection pool.
+
+**Q3: What are the problems with Singleton?**  
+A: It introduces global state, makes testing harder, hides dependencies, and violates SRP.
+
+**Q4: How is Singleton different from a static class?**  
+A: A static class has only static methods and no instance. A Singleton is an actual instance — just one instance that is shared.
+
+**Q5: How do you implement a thread-safe Singleton?**  
+A: In JavaScript, it's usually not an issue because JavaScript is single-threaded. In multi-threaded languages, you use locks or lazy initialization techniques.
+
+**Q6: Why do some consider Singleton an anti-pattern?**  
+A: Because it introduces global state and tight coupling, making code harder to test and maintain. Dependency Injection is often a better alternative.
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "The Singleton pattern ensures a class has only one instance and provides global access to it. It's useful for managing shared resources like loggers, configuration, or database connection pools. However, it has downsides — it introduces global state, makes testing harder, and violates the Single Responsibility Principle. In modern applications, Dependency Injection with a single instance is often a better alternative."
+
+---
+
+## Quick Revision
+
+- Singleton ensures **one instance** of a class.
+- Provides **global access** to that instance.
+- Implemented with a **private constructor** and a **static getInstance() method**.
+- Useful for: **logger, config, database pool, cache**.
+- **Downsides:** global state, hard to test, violates SRP.
+- **Modern alternative:** Dependency Injection.
+- In **Node.js modules**, you often do not need explicit Singleton — modules are cached.
+- Valid when you need **shared state** or **one resource**.
+- **Anti-pattern if overused.**
+
+---
+
+## One-Line Memory Trick
+
+**"Singleton is like a country's president — only one at a time, everyone accesses the same one."**

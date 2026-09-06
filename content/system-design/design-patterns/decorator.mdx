@@ -1,0 +1,649 @@
+---
+title: "Decorator Pattern"
+description: "Attach additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality."
+difficulty: "beginner"
+readingTime: "12 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["structural", "decorator", "beginner", "high-priority", "interview-important", "ocp"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["adapter", "proxy", "strategy"]
+summary: "Decorator pattern adds behavior to objects dynamically without modifying their code. It wraps objects in decorator classes that add new functionality."
+interviewQuestions:
+  - "What is the Decorator pattern?"
+  - "When would you use Decorator instead of inheritance?"
+  - "What's the difference between Decorator and Adapter?"
+  - "How does Decorator follow the Open/Closed Principle?"
+  - "Give a real-world example of Decorator."
+---
+
+## Pattern Information
+
+**Category:** Structural  
+**Difficulty:** 🟢 Beginner  
+**Priority:** High  
+**Commonly Used:** Yes  
+**Relevant To:** Backend, Frontend, JavaScript, TypeScript, Node.js, React
+
+---
+
+## What Is Decorator?
+
+Decorator pattern lets you add new behavior to objects dynamically by wrapping them in decorator objects.
+
+Instead of modifying the original class or using inheritance, you **wrap** the object with decorators that add functionality.
+
+<Callout type="definition">
+  **Decorator** = Add behavior to objects dynamically without modifying their code.
+</Callout>
+
+---
+
+## Why Does This Pattern Exist?
+
+You're building a coffee shop app. You have a basic `Coffee` class:
+
+```js
+class Coffee {
+  cost() {
+    return 5;
+  }
+}
+```
+
+Now customers want to add extras: milk, sugar, whipped cream.
+
+**Option 1: Inheritance (Bad)**
+
+```js
+class Coffee { cost() { return 5; } }
+class CoffeeWithMilk extends Coffee { cost() { return 6; } }
+class CoffeeWithSugar extends Coffee { cost() { return 5.5; } }
+class CoffeeWithMilkAndSugar extends Coffee { cost() { return 6.5; } }
+class CoffeeWithMilkAndSugarAndCream extends Coffee { cost() { return 7; } }
+// Combinatorial explosion! ❌
+```
+
+You'd need a class for every combination. With 5 extras, that's 2^5 = 32 classes!
+
+**Option 2: Adding fields to Coffee (Bad)**
+
+```js
+class Coffee {
+  constructor(hasMilk, hasSugar, hasCream) {
+    this.hasMilk = hasMilk;
+    this.hasSugar = hasSugar;
+    this.hasCream = hasCream;
+  }
+  cost() {
+    let total = 5;
+    if (this.hasMilk) total += 1;
+    if (this.hasSugar) total += 0.5;
+    if (this.hasCream) total += 1;
+    return total;
+  }
+}
+```
+
+This violates the Open/Closed Principle. Adding new extras means modifying the `Coffee` class.
+
+**Decorator Pattern (Good)** ✅
+
+Wrap the coffee object with decorators for each extra:
+
+```js
+const coffee = new Coffee(); // $5
+const withMilk = new MilkDecorator(coffee); // $6
+const withSugar = new SugarDecorator(withMilk); // $6.50
+```
+
+Each decorator adds behavior without modifying `Coffee`.
+
+---
+
+## The Problem
+
+```js
+class Notification {
+  send(message) {
+    console.log(`Notification: ${message}`);
+  }
+}
+
+// What if you need:
+// - Email notification
+// - SMS notification
+// - Email + SMS notification
+// - Email + SMS + Slack notification
+
+// Option 1: Inheritance
+class EmailNotification extends Notification { /* ... */ }
+class SmsNotification extends Notification { /* ... */ }
+class EmailAndSmsNotification extends Notification { /* ... */ }
+// Combinatorial explosion ❌
+
+// Option 2: Flags in constructor
+class Notification {
+  constructor(email, sms, slack) { /* ... */ }
+}
+// Violates OCP ❌
+```
+
+**Problems:**
+
+- Too many subclasses for combinations
+- Cannot combine behaviors dynamically
+- Violates Open/Closed Principle
+
+---
+
+## What Is Wrong With This Approach?
+
+- **Inheritance is static** — combinations are fixed at compile time
+- **Class explosion** — exponential growth of subclasses
+- **Inflexible** — cannot add/remove behavior at runtime
+- **Violates OCP** — adding new behavior means modifying existing classes
+
+---
+
+## The Idea Behind the Pattern
+
+What if each extra behavior was a **decorator** that wraps the original object?
+
+1. Decorators implement the same interface as the object they wrap
+2. Decorators **forward** requests to the wrapped object
+3. Decorators **add** their own behavior before or after forwarding
+
+This way:
+
+- You can wrap objects with multiple decorators
+- Decorators are combined at runtime
+- No modification to the original class
+
+---
+
+## How Does It Work?
+
+### Step-by-Step
+
+1. Define a **Component interface**
+2. Create a **Concrete Component** (the basic object)
+3. Create **Decorators** that implement the same interface
+4. Decorators wrap the component and add behavior
+5. Stack decorators to combine behavior
+
+---
+
+## Structure
+
+```text
+    Component
+    (interface)
+        △
+        │ implements
+        │
+   ┌────┴────────┐
+   │             │
+ConcreteComponent  Decorator ◄───── wraps Component
+                      △
+                      │ extends
+              ┌───────┴────────┐
+              │                │
+       ConcreteDecoratorA  ConcreteDecoratorB
+```
+
+**Key parts:**
+
+- **Component** — interface both objects and decorators implement
+- **Concrete Component** — the basic object
+- **Decorator** — wraps a Component and forwards calls
+- **Concrete Decorators** — add specific behavior
+
+---
+
+## Simple Real-World Analogy
+
+Think of **dressing for winter**:
+
+- Base: T-shirt
+- Add: Sweater (decorator)
+- Add: Jacket (decorator)
+- Add: Scarf (decorator)
+
+Each layer **wraps** the previous one and adds functionality (warmth). You can add or remove layers dynamically.
+
+---
+
+## TypeScript Example
+
+### Step 1: Define the Component Interface
+
+```ts
+interface Coffee {
+  cost(): number;
+  description(): string;
+}
+```
+
+### Step 2: Create the Concrete Component
+
+```ts
+class BasicCoffee implements Coffee {
+  cost(): number {
+    return 5;
+  }
+
+  description(): string {
+    return "Basic Coffee";
+  }
+}
+```
+
+### Step 3: Create Decorators
+
+```ts
+// Base Decorator
+abstract class CoffeeDecorator implements Coffee {
+  constructor(protected coffee: Coffee) {}
+
+  cost(): number {
+    return this.coffee.cost(); // Forward to wrapped object
+  }
+
+  description(): string {
+    return this.coffee.description();
+  }
+}
+
+// Concrete Decorators
+class MilkDecorator extends CoffeeDecorator {
+  cost(): number {
+    return this.coffee.cost() + 1; // Add milk cost
+  }
+
+  description(): string {
+    return this.coffee.description() + ", Milk";
+  }
+}
+
+class SugarDecorator extends CoffeeDecorator {
+  cost(): number {
+    return this.coffee.cost() + 0.5;
+  }
+
+  description(): string {
+    return this.coffee.description() + ", Sugar";
+  }
+}
+
+class WhippedCreamDecorator extends CoffeeDecorator {
+  cost(): number {
+    return this.coffee.cost() + 1.5;
+  }
+
+  description(): string {
+    return this.coffee.description() + ", Whipped Cream";
+  }
+}
+```
+
+### Step 4: Use the Decorators
+
+```ts
+// Start with basic coffee
+let coffee: Coffee = new BasicCoffee();
+console.log(`${coffee.description()} - $${coffee.cost()}`);
+// Basic Coffee - $5
+
+// Add milk
+coffee = new MilkDecorator(coffee);
+console.log(`${coffee.description()} - $${coffee.cost()}`);
+// Basic Coffee, Milk - $6
+
+// Add sugar
+coffee = new SugarDecorator(coffee);
+console.log(`${coffee.description()} - $${coffee.cost()}`);
+// Basic Coffee, Milk, Sugar - $6.5
+
+// Add whipped cream
+coffee = new WhippedCreamDecorator(coffee);
+console.log(`${coffee.description()} - $${coffee.cost()}`);
+// Basic Coffee, Milk, Sugar, Whipped Cream - $8
+```
+
+**What happened:**
+
+- Each decorator wraps the previous object
+- Calls are forwarded through the chain
+- Each decorator adds its own behavior
+
+---
+
+## JavaScript Functional Approach
+
+JavaScript can use functions as decorators:
+
+```js
+function basicCoffee() {
+  return { cost: 5, description: "Basic Coffee" };
+}
+
+function withMilk(coffee) {
+  return {
+    cost: coffee.cost + 1,
+    description: coffee.description + ", Milk",
+  };
+}
+
+function withSugar(coffee) {
+  return {
+    cost: coffee.cost + 0.5,
+    description: coffee.description + ", Sugar",
+  };
+}
+
+// Usage
+let coffee = basicCoffee();
+coffee = withMilk(coffee);
+coffee = withSugar(coffee);
+console.log(coffee); // { cost: 6.5, description: 'Basic Coffee, Milk, Sugar' }
+```
+
+---
+
+## How the Pattern Solves the Problem
+
+| Before (Inheritance) | After (Decorator) |
+|---|---|
+| Exponential class growth | Composable decorators |
+| Static combinations | Dynamic at runtime |
+| Violates OCP | Follows OCP |
+| Cannot add/remove behavior | Wrap/unwrap dynamically |
+
+---
+
+## Advantages
+
+✅ **Flexible** — add/remove behavior at runtime  
+✅ **Composable** — combine decorators  
+✅ **Open/Closed Principle** — extend without modifying  
+✅ **Single Responsibility** — each decorator has one job  
+✅ **No class explosion** — avoid combinatorial subclasses
+
+---
+
+## Disadvantages
+
+⚠️ **Many small objects** — lots of wrapper objects  
+⚠️ **Hard to debug** — chain of wrappers  
+⚠️ **Order matters** — decorators applied in sequence
+
+---
+
+## When Should I Use It?
+
+Use Decorator when:
+
+✅ You need to add behavior to objects dynamically  
+✅ Inheritance would create too many subclasses  
+✅ You want to combine behaviors at runtime  
+✅ You need to follow the Open/Closed Principle  
+
+**Common use cases:**
+
+- **UI components** (borders, scroll, shadows)
+- **Data streams** (compression, encryption)
+- **Middleware** (Express, Koa)
+- **Logging/authentication** wrappers
+- **Caching** layers
+
+---
+
+## When Should I NOT Use It?
+
+Avoid Decorator when:
+
+❌ Simple inheritance is sufficient  
+❌ Behavior cannot be added/removed dynamically  
+❌ The decorator chain becomes too complex  
+
+---
+
+## Real-World Examples
+
+### 1. Text Formatting
+
+```ts
+interface Text {
+  render(): string;
+}
+
+class PlainText implements Text {
+  constructor(private content: string) {}
+  render(): string {
+    return this.content;
+  }
+}
+
+class BoldDecorator implements Text {
+  constructor(private text: Text) {}
+  render(): string {
+    return `<b>${this.text.render()}</b>`;
+  }
+}
+
+class ItalicDecorator implements Text {
+  constructor(private text: Text) {}
+  render(): string {
+    return `<i>${this.text.render()}</i>`;
+  }
+}
+
+// Usage
+let text: Text = new PlainText("Hello");
+text = new BoldDecorator(text);
+text = new ItalicDecorator(text);
+console.log(text.render()); // <i><b>Hello</b></i>
+```
+
+---
+
+### 2. HTTP Middleware (Express-style)
+
+```ts
+type Handler = (req: any) => any;
+
+function logger(next: Handler): Handler {
+  return (req) => {
+    console.log(`[LOG] ${req.method} ${req.url}`);
+    return next(req);
+  };
+}
+
+function auth(next: Handler): Handler {
+  return (req) => {
+    if (!req.headers.authorization) {
+      throw new Error("Unauthorized");
+    }
+    return next(req);
+  };
+}
+
+function baseHandler(req: any) {
+  return { status: 200, body: "OK" };
+}
+
+// Compose middleware
+const handler = logger(auth(baseHandler));
+
+// Use
+handler({ method: "GET", url: "/api/users", headers: { authorization: "Bearer token" } });
+// [LOG] GET /api/users
+// { status: 200, body: 'OK' }
+```
+
+---
+
+### 3. Data Stream Decorators
+
+```ts
+interface DataSource {
+  read(): string;
+}
+
+class FileDataSource implements DataSource {
+  constructor(private filename: string) {}
+  read(): string {
+    return `Reading from ${this.filename}`;
+  }
+}
+
+class CompressionDecorator implements DataSource {
+  constructor(private source: DataSource) {}
+  read(): string {
+    const data = this.source.read();
+    return `Decompressing(${data})`;
+  }
+}
+
+class EncryptionDecorator implements DataSource {
+  constructor(private source: DataSource) {}
+  read(): string {
+    const data = this.source.read();
+    return `Decrypting(${data})`;
+  }
+}
+
+// Usage
+let source: DataSource = new FileDataSource("data.txt");
+source = new CompressionDecorator(source);
+source = new EncryptionDecorator(source);
+console.log(source.read());
+// Decrypting(Decompressing(Reading from data.txt))
+```
+
+---
+
+## Common Mistakes
+
+### Mistake 1: Decorator Changes Interface
+
+```ts
+// ❌ Decorator adds methods not in interface
+class LoggerDecorator implements Coffee {
+  getLogs() { return this.logs; } // ❌ Not in Coffee interface
+}
+
+// ✅ Decorator only implements interface methods
+class LoggerDecorator implements Coffee {
+  cost() { /* ... */ }
+  description() { /* ... */ }
+}
+```
+
+---
+
+### Mistake 2: Forgetting to Forward Calls
+
+```ts
+// ❌ Doesn't forward to wrapped object
+class MilkDecorator {
+  cost() {
+    return 1; // ❌ Forgot to add base cost
+  }
+}
+
+// ✅ Forwards to wrapped object
+class MilkDecorator {
+  cost() {
+    return this.coffee.cost() + 1; // ✅
+  }
+}
+```
+
+---
+
+## Common Misconceptions
+
+### "Decorator is just inheritance"
+
+No. Inheritance is static (compile-time). Decorator is dynamic (runtime). You can stack decorators at runtime.
+
+### "Decorator and Adapter are the same"
+
+No.
+
+- **Adapter** changes interface (translation)
+- **Decorator** keeps same interface (adds behavior)
+
+---
+
+## Related SOLID Principles
+
+### Open/Closed Principle (OCP)
+
+✅ **Decorator is OCP in action.** Add behavior by creating new decorators, not modifying existing code.
+
+### Single Responsibility Principle (SRP)
+
+✅ Each decorator has one responsibility.
+
+---
+
+## Related Design Patterns
+
+### Adapter
+
+**Difference:** Adapter changes interface. Decorator adds behavior without changing interface.
+
+### Proxy
+
+**Difference:** Proxy controls access. Decorator adds functionality.
+
+### Strategy
+
+**Difference:** Strategy swaps algorithms. Decorator wraps objects.
+
+---
+
+## Interview Questions
+
+**Q1: What is the Decorator pattern?**  
+A: A structural pattern that adds behavior to objects dynamically by wrapping them, without modifying their code.
+
+**Q2: When would you use Decorator instead of inheritance?**  
+A: When you need to add behavior dynamically at runtime, or when inheritance would create too many subclasses.
+
+**Q3: What's the difference between Decorator and Adapter?**  
+A: Adapter changes an interface to make it compatible. Decorator keeps the same interface and adds behavior.
+
+**Q4: How does Decorator follow OCP?**  
+A: You extend behavior by adding new decorators, without modifying existing classes.
+
+**Q5: Give a real-world example.**  
+A: Coffee shop extras (milk, sugar), UI components (borders, scroll), or Express middleware.
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "Decorator is a structural pattern that adds behavior to objects dynamically by wrapping them in decorator objects. Each decorator implements the same interface as the object it wraps, forwards calls to the wrapped object, and adds its own behavior. This follows the Open/Closed Principle—you extend functionality without modifying existing code. It's commonly used in UI frameworks, middleware systems, and anywhere you need to compose behavior at runtime. Unlike inheritance, decorators are applied dynamically and can be stacked."
+
+---
+
+## Quick Revision
+
+- Decorator **adds behavior** dynamically by wrapping objects
+- **Same interface** as the object it wraps
+- Forwards calls to wrapped object, adds behavior
+- **Composable** — stack multiple decorators
+- **Runtime** — apply dynamically
+- **OCP** — extend without modifying
+- Common in: **middleware, UI components, streams**
+- Different from **Adapter** (changes interface) and **Proxy** (controls access)
+
+---
+
+## One-Line Memory Trick
+
+**"Decorator is like winter clothes — wrap objects in layers to add functionality."**

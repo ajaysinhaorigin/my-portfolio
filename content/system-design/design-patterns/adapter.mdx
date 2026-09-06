@@ -1,0 +1,592 @@
+---
+title: "Adapter Pattern"
+description: "Convert the interface of a class into another interface clients expect. Adapter lets classes work together that couldn't otherwise because of incompatible interfaces."
+difficulty: "beginner"
+readingTime: "11 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["structural", "adapter", "beginner", "high-priority", "interview-important"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["facade", "bridge", "decorator"]
+summary: "Adapter pattern makes incompatible interfaces compatible. It acts as a bridge between two interfaces, allowing them to work together without modifying their source code."
+interviewQuestions:
+  - "What is the Adapter pattern?"
+  - "When would you use an Adapter?"
+  - "What's the difference between Adapter and Facade?"
+  - "Give a real-world example of Adapter pattern."
+---
+
+## Pattern Information
+
+**Category:** Structural  
+**Difficulty:** 🟢 Beginner  
+**Priority:** High  
+**Commonly Used:** Yes  
+**Relevant To:** Backend, Frontend, JavaScript, TypeScript, Node.js, APIs
+
+---
+
+## What Is Adapter?
+
+Adapter pattern lets incompatible interfaces work together. It acts as a translator between two systems that cannot communicate directly.
+
+Think of it as a **wrapper** that converts one interface into another that the client expects.
+
+<Callout type="definition">
+  **Adapter** = Make two incompatible interfaces compatible by translating between them.
+</Callout>
+
+---
+
+## Why Does This Pattern Exist?
+
+You're building an app that uses a third-party payment library:
+
+```js
+// Your app expects this interface
+interface PaymentProcessor {
+  processPayment(amount: number): void;
+}
+
+// But Stripe uses this interface
+class StripeAPI {
+  charge(cents: number, currency: string): void {
+    console.log(`Charging ${cents} ${currency} via Stripe`);
+  }
+}
+```
+
+Your app expects `processPayment(amount)`, but Stripe provides `charge(cents, currency)`.
+
+**The interfaces are incompatible.**
+
+You could:
+1. ❌ Rewrite your entire app to use Stripe's interface
+2. ❌ Modify Stripe's library (you can't — it's third-party)
+3. ✅ Create an **Adapter** that translates between them
+
+---
+
+## The Problem
+
+```js
+// Your app uses this interface
+class OrderService {
+  constructor(paymentProcessor) {
+    this.paymentProcessor = paymentProcessor;
+  }
+
+  checkout(amount) {
+    this.paymentProcessor.processPayment(amount);
+  }
+}
+
+// Stripe has a different interface
+class StripeAPI {
+  charge(cents, currency) {
+    console.log(`Charging ${cents} ${currency}`);
+  }
+}
+
+// This won't work:
+const stripe = new StripeAPI();
+const service = new OrderService(stripe);
+service.checkout(100); // ❌ stripe.processPayment is not a function
+```
+
+**Problems:**
+
+- Interfaces don't match
+- Cannot modify Stripe (third-party code)
+- Cannot rewrite your entire app
+
+---
+
+## What Is Wrong With This Approach?
+
+- **Incompatible interfaces** — your code expects one thing, the library provides another
+- **Cannot modify either side** — you don't own the third-party code, and rewriting your app is expensive
+- **Tight coupling** — if you hardcode Stripe's interface everywhere, switching payment providers is painful
+
+---
+
+## The Idea Behind the Pattern
+
+Create an **Adapter** that:
+
+1. Implements the interface your app expects
+2. Wraps the incompatible third-party class
+3. Translates calls between the two
+
+Your app talks to the Adapter. The Adapter talks to the third-party library.
+
+---
+
+## How Does It Work?
+
+### Step-by-Step
+
+1. Define the **Target Interface** your app expects
+2. The **Adaptee** is the incompatible third-party class
+3. Create an **Adapter** that implements the Target Interface
+4. Inside the Adapter, wrap the Adaptee and translate calls
+
+---
+
+## Structure
+
+```text
+    Client
+       │
+       │ uses
+       ▼
+   Target ◄───────── interface expected by client
+   (interface)
+       △
+       │ implements
+       │
+    Adapter ────────► Adaptee
+       │              (incompatible class)
+       │
+       └─ translates calls
+```
+
+**Key parts:**
+
+- **Target** — the interface your app expects
+- **Adapter** — implements Target, wraps Adaptee
+- **Adaptee** — the incompatible third-party class
+- **Client** — your app code
+
+---
+
+## Simple Real-World Analogy
+
+Think of a **power adapter** when you travel.
+
+- Your phone charger (US plug)
+- European outlet (different interface)
+- The adapter **converts** one interface to another
+
+The phone doesn't change. The outlet doesn't change. The adapter translates between them.
+
+---
+
+## TypeScript Example
+
+### Step 1: Define the Target Interface
+
+```ts
+// The interface your app expects
+interface PaymentProcessor {
+  processPayment(amount: number): void;
+}
+```
+
+### Step 2: The Adaptee (Incompatible Class)
+
+```ts
+// Third-party library with different interface
+class StripeAPI {
+  charge(cents: number, currency: string): void {
+    console.log(`Charging ${cents} ${currency} via Stripe`);
+  }
+}
+```
+
+### Step 3: Create the Adapter
+
+```ts
+class StripeAdapter implements PaymentProcessor {
+  private stripe: StripeAPI;
+
+  constructor() {
+    this.stripe = new StripeAPI();
+  }
+
+  processPayment(amount: number): void {
+    // Translate: amount in dollars → cents
+    const cents = amount * 100;
+    this.stripe.charge(cents, "USD");
+  }
+}
+```
+
+### Step 4: Use the Adapter
+
+```ts
+class OrderService {
+  constructor(private paymentProcessor: PaymentProcessor) {}
+
+  checkout(amount: number): void {
+    this.paymentProcessor.processPayment(amount);
+  }
+}
+
+// Use the adapter
+const stripeAdapter = new StripeAdapter();
+const service = new OrderService(stripeAdapter);
+service.checkout(50); // Charging 5000 USD via Stripe ✅
+```
+
+**What happened:**
+
+- `OrderService` still uses `processPayment(amount)`
+- The Adapter translates `processPayment(50)` → `stripe.charge(5000, "USD")`
+- No changes to your app code or Stripe's code
+
+---
+
+## JavaScript Version
+
+```js
+// Third-party library
+class LegacyPrinter {
+  printDocument(text) {
+    console.log(`[Legacy] Printing: ${text}`);
+  }
+}
+
+// Your app expects this interface
+class ModernPrinter {
+  print(content) {
+    throw new Error("Not implemented");
+  }
+}
+
+// Adapter
+class PrinterAdapter extends ModernPrinter {
+  constructor() {
+    super();
+    this.legacyPrinter = new LegacyPrinter();
+  }
+
+  print(content) {
+    // Translate modern interface to legacy
+    this.legacyPrinter.printDocument(content);
+  }
+}
+
+// Usage
+const printer = new PrinterAdapter();
+printer.print("Hello World"); // [Legacy] Printing: Hello World
+```
+
+---
+
+## How the Pattern Solves the Problem
+
+| Before (Incompatible) | After (Adapter) |
+|---|---|
+| Interfaces don't match | Adapter translates between them |
+| Must modify third-party code | No changes to third-party code |
+| Cannot reuse existing code | Can reuse both systems |
+| Tight coupling | Loose coupling via adapter |
+
+---
+
+## Advantages
+
+✅ **Reuse existing code** — no need to rewrite  
+✅ **No modification** — third-party code stays unchanged  
+✅ **Loose coupling** — client depends on interface, not implementation  
+✅ **Single Responsibility** — adapter handles translation only  
+✅ **Open/Closed** — add adapters without changing existing code
+
+---
+
+## Disadvantages
+
+⚠️ **Extra layer** — adds indirection  
+⚠️ **Complexity** — more classes to maintain  
+⚠️ **Performance** — slight overhead from translation
+
+---
+
+## When Should I Use It?
+
+Use Adapter when:
+
+✅ You need to use a class with an incompatible interface  
+✅ You cannot modify the third-party class  
+✅ You want to reuse existing code  
+✅ You need to integrate legacy systems  
+
+**Common use cases:**
+
+- **Third-party APIs** (Stripe, PayPal, AWS)
+- **Legacy system integration**
+- **Database drivers** (MySQL → Postgres)
+- **File format converters** (JSON → XML)
+
+---
+
+## When Should I NOT Use It?
+
+Avoid Adapter when:
+
+❌ You can modify both interfaces directly  
+❌ The interfaces are already compatible  
+❌ The translation logic is too complex  
+
+---
+
+## Real-World Examples
+
+### 1. Database Adapter
+
+```ts
+// Target interface
+interface Database {
+  connect(): void;
+  query(sql: string): any[];
+}
+
+// MySQL (Adaptee)
+class MySQLConnection {
+  open(): void {
+    console.log("MySQL connected");
+  }
+  execute(sql: string): any[] {
+    return [];
+  }
+}
+
+// Adapter
+class MySQLAdapter implements Database {
+  private mysql: MySQLConnection;
+
+  constructor() {
+    this.mysql = new MySQLConnection();
+  }
+
+  connect(): void {
+    this.mysql.open(); // Translate connect → open
+  }
+
+  query(sql: string): any[] {
+    return this.mysql.execute(sql); // Translate query → execute
+  }
+}
+
+// Usage
+const db: Database = new MySQLAdapter();
+db.connect();
+db.query("SELECT * FROM users");
+```
+
+---
+
+### 2. API Response Adapter
+
+```ts
+// Your app expects this format
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+// Third-party API returns this format
+interface ExternalUserAPI {
+  userId: number;
+  fullName: string;
+  emailAddress: string;
+}
+
+// Adapter
+class UserAdapter {
+  static adapt(externalUser: ExternalUserAPI): User {
+    return {
+      id: externalUser.userId,
+      name: externalUser.fullName,
+      email: externalUser.emailAddress,
+    };
+  }
+}
+
+// Usage
+const externalUser = {
+  userId: 1,
+  fullName: "Alice",
+  emailAddress: "alice@example.com",
+};
+
+const user: User = UserAdapter.adapt(externalUser);
+console.log(user); // { id: 1, name: 'Alice', email: 'alice@example.com' }
+```
+
+---
+
+### 3. Logger Adapter (Node.js)
+
+```ts
+// Your app uses this interface
+interface Logger {
+  log(message: string): void;
+}
+
+// Third-party logger (Winston)
+class WinstonLogger {
+  info(msg: string, meta: object): void {
+    console.log(`[INFO] ${msg}`, meta);
+  }
+}
+
+// Adapter
+class WinstonAdapter implements Logger {
+  private winston: WinstonLogger;
+
+  constructor() {
+    this.winston = new WinstonLogger();
+  }
+
+  log(message: string): void {
+    this.winston.info(message, { timestamp: new Date() });
+  }
+}
+
+// Usage
+const logger: Logger = new WinstonAdapter();
+logger.log("Application started");
+```
+
+---
+
+## Common Mistakes
+
+### Mistake 1: Adapter Does Too Much
+
+```js
+// ❌ Adapter is adding business logic
+class StripeAdapter {
+  processPayment(amount) {
+    if (amount > 10000) {
+      sendAlertToAdmin(); // ❌ Not adapter's job
+    }
+    this.stripe.charge(amount * 100, "USD");
+  }
+}
+
+// ✅ Adapter only translates
+class StripeAdapter {
+  processPayment(amount) {
+    this.stripe.charge(amount * 100, "USD");
+  }
+}
+```
+
+**Rule:** Adapter should only translate interfaces, not add business logic.
+
+---
+
+### Mistake 2: Not Using Adapter When Needed
+
+```js
+// ❌ Directly using Stripe everywhere
+class OrderService {
+  checkout(amount) {
+    stripe.charge(amount * 100, "USD"); // Tightly coupled
+  }
+}
+
+// ✅ Use adapter
+class OrderService {
+  constructor(paymentProcessor) {
+    this.paymentProcessor = paymentProcessor;
+  }
+  checkout(amount) {
+    this.paymentProcessor.processPayment(amount);
+  }
+}
+```
+
+---
+
+## Common Misconceptions
+
+### "Adapter and Facade are the same"
+
+No.
+
+- **Adapter** makes one interface compatible with another (one-to-one)
+- **Facade** simplifies a complex system by providing a simple interface (one-to-many)
+
+### "Adapter is just a wrapper"
+
+Partially true. But Adapter specifically **translates interfaces**, not just wraps functionality.
+
+---
+
+## Related SOLID Principles
+
+### Single Responsibility Principle (SRP)
+
+✅ Adapter has one job: translate between interfaces.
+
+### Open/Closed Principle (OCP)
+
+✅ Add new adapters without modifying existing code.
+
+### Dependency Inversion Principle (DIP)
+
+✅ Client depends on interface, not concrete implementation.
+
+---
+
+## Related Design Patterns
+
+### Facade
+
+**Difference:** Adapter makes interfaces compatible. Facade simplifies a complex interface.
+
+### Bridge
+
+**Difference:** Adapter adapts existing interfaces. Bridge separates abstraction from implementation upfront.
+
+### Decorator
+
+**Difference:** Decorator adds behavior. Adapter changes interface.
+
+---
+
+## Interview Questions
+
+**Q1: What is the Adapter pattern?**  
+A: A structural pattern that makes incompatible interfaces work together by translating between them.
+
+**Q2: When would you use an Adapter?**  
+A: When you need to integrate a third-party library or legacy system with an incompatible interface.
+
+**Q3: What's the difference between Adapter and Facade?**  
+A: Adapter makes two interfaces compatible (translation). Facade simplifies a complex interface (simplification).
+
+**Q4: Give a real-world example.**  
+A: A power adapter for international travel, or integrating Stripe's payment API into your app that expects a different interface.
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "Adapter is a structural pattern that makes incompatible interfaces compatible. It wraps an existing class and translates its interface into one that the client expects. This is useful when integrating third-party libraries or legacy systems without modifying their code. For example, if your app expects a `processPayment()` method but Stripe provides `charge()`, you create an adapter that translates between them. It follows the Open/Closed Principle—you extend functionality without modifying existing code."
+
+---
+
+## Quick Revision
+
+- Adapter **translates** between incompatible interfaces
+- Acts as a **wrapper** around the Adaptee
+- **No modification** to existing code
+- Client depends on the **Target interface**
+- Adapter implements Target, wraps Adaptee
+- Common in: **third-party APIs, legacy integration, database drivers**
+- **SRP** — only translates, no business logic
+- **OCP** — add adapters without changing code
+- **DIP** — depend on interfaces
+- Different from **Facade** (simplifies) and **Decorator** (adds behavior)
+
+---
+
+## One-Line Memory Trick
+
+**"Adapter is like a power plug converter — makes incompatible interfaces work together."**

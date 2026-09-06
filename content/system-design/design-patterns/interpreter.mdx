@@ -1,0 +1,150 @@
+---
+title: "Interpreter Pattern"
+description: "Given a language, define a representation for its grammar along with an interpreter that uses the representation to interpret sentences in the language."
+difficulty: "advanced"
+readingTime: "10 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["behavioral", "interpreter", "advanced"]
+prerequisites: ["oop", "composite"]
+relatedTopics: ["composite", "visitor"]
+summary: "Interpreter defines a grammar for a language and provides an interpreter to process sentences in that language."
+---
+
+## Pattern Information
+
+**Category:** Behavioral  
+**Difficulty:** 🔴 Advanced  
+**Commonly Used:** Rare  
+
+---
+
+## What Is Interpreter?
+
+Interpreter defines a **grammar** for a language and provides an interpreter to evaluate sentences.
+
+<Callout type="definition">
+  **Interpreter** = Define grammar rules and interpret expressions.
+</Callout>
+
+---
+
+## TypeScript Example
+
+```ts
+// Simple expression evaluator: "5 + 3" → 8
+interface Expression {
+  interpret(): number;
+}
+
+class NumberExpression implements Expression {
+  constructor(private value: number) {}
+  interpret(): number {
+    return this.value;
+  }
+}
+
+class AddExpression implements Expression {
+  constructor(
+    private left: Expression,
+    private right: Expression
+  ) {}
+  
+  interpret(): number {
+    return this.left.interpret() + this.right.interpret();
+  }
+}
+
+// Usage: Interpret "5 + 3"
+const expression = new AddExpression(
+  new NumberExpression(5),
+  new NumberExpression(3)
+);
+
+console.log(expression.interpret()); // 8
+```
+
+---
+
+## Real-World Example
+
+```js
+// Boolean expression interpreter
+class VariableExpression {
+  constructor(name) {
+    this.name = name;
+  }
+  
+  interpret(context) {
+    return context[this.name];
+  }
+}
+
+class AndExpression {
+  constructor(left, right) {
+    this.left = left;
+    this.right = right;
+  }
+  
+  interpret(context) {
+    return this.left.interpret(context) && this.right.interpret(context);
+  }
+}
+
+// Usage: "A AND B"
+const expr = new AndExpression(
+  new VariableExpression('A'),
+  new VariableExpression('B')
+);
+
+console.log(expr.interpret({ A: true, B: false })); // false
+console.log(expr.interpret({ A: true, B: true }));  // true
+```
+
+---
+
+## When to Use
+
+✅ You have a simple grammar to interpret  
+✅ Performance is not critical  
+
+**Common:** SQL parsers, regular expressions, configuration languages, calculators.
+
+---
+
+## Disadvantages
+
+⚠️ **Complex grammars** become unmanageable  
+⚠️ **Performance** — interpreting at runtime is slow  
+⚠️ **Hard to maintain** — changes to grammar affect many classes  
+
+---
+
+## Alternatives
+
+For complex languages, use:
+- Parser generators (ANTLR, PEG.js)
+- Compiler compilers (Yacc, Bison)
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "Interpreter is a behavioral pattern that defines a grammar for a simple language and provides an interpreter to evaluate expressions. Each grammar rule is represented as a class. It's useful for simple domain-specific languages like calculators or boolean expressions. However, it becomes complex for larger grammars—modern applications typically use parser generators like ANTLR instead."
+
+---
+
+## Quick Revision
+
+- Defines **grammar** as classes  
+- Each rule is a **separate class**  
+- **Interprets** expressions at runtime  
+- Useful for: **simple DSLs, calculators, expressions**  
+- **Rare** in modern applications  
+- **Alternative:** Parser generators (ANTLR, PEG.js)  
+
+---
+
+## One-Line Memory Trick
+
+**"Interpreter is like a calculator — defines rules (grammar) and evaluates expressions."**

@@ -1,0 +1,578 @@
+---
+title: "Facade Pattern"
+description: "Provide a unified interface to a set of interfaces in a subsystem. Facade defines a higher-level interface that makes the subsystem easier to use."
+difficulty: "beginner"
+readingTime: "11 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["structural", "facade", "beginner", "high-priority", "interview-important"]
+prerequisites: ["oop", "solid-principles"]
+relatedTopics: ["adapter", "decorator"]
+summary: "Facade pattern provides a simple interface to a complex subsystem. It hides complexity and makes the system easier to use."
+interviewQuestions:
+  - "What is the Facade pattern?"
+  - "What's the difference between Facade and Adapter?"
+  - "When would you use Facade?"
+  - "Can Facade have multiple implementations?"
+  - "Give a real-world example of Facade."
+---
+
+## Pattern Information
+
+**Category:** Structural  
+**Difficulty:** 🟢 Beginner  
+**Priority:** High  
+**Commonly Used:** Yes  
+**Relevant To:** Backend, Frontend, JavaScript, TypeScript, Node.js, APIs
+
+---
+
+## What Is Facade?
+
+Facade pattern provides a **simple, unified interface** to a complex subsystem. It hides the complexity behind a clean API.
+
+Think of it as a **simplified wrapper** around complicated code.
+
+<Callout type="definition">
+  **Facade** = A simple interface that hides a complex subsystem.
+</Callout>
+
+---
+
+## Why Does This Pattern Exist?
+
+You're using a complex video conversion library:
+
+```ts
+// Complex subsystem
+const videoFile = new VideoFile('video.mp4');
+const codec = CodecFactory.extract(videoFile);
+const buffer = BitrateReader.read(videoFile, codec);
+const result = BitrateReader.convert(buffer, codec);
+AudioMixer.fix(result);
+// ... 10 more steps
+```
+
+Every time you want to convert a video, you repeat these 15 lines.
+
+**With Facade:**
+
+```ts
+const facade = new VideoConverter();
+facade.convert('video.mp4', 'avi'); // Done! ✅
+```
+
+The Facade hides all the complexity.
+
+---
+
+## The Problem
+
+```ts
+// Complex order processing subsystem
+class InventorySystem {
+  checkStock(productId: string): boolean { /* ... */ }
+  reserveItem(productId: string): void { /* ... */ }
+}
+
+class PaymentSystem {
+  processPayment(amount: number): boolean { /* ... */ }
+}
+
+class ShippingSystem {
+  scheduleDelivery(address: string): void { /* ... */ }
+}
+
+class NotificationSystem {
+  sendEmail(to: string, message: string): void { /* ... */ }
+}
+
+// Client has to orchestrate everything
+function placeOrder(order: Order) {
+  const inventory = new InventorySystem();
+  const payment = new PaymentSystem();
+  const shipping = new ShippingSystem();
+  const notification = new NotificationSystem();
+
+  if (!inventory.checkStock(order.productId)) {
+    throw new Error("Out of stock");
+  }
+  
+  inventory.reserveItem(order.productId);
+  
+  if (!payment.processPayment(order.total)) {
+    inventory.releaseItem(order.productId);
+    throw new Error("Payment failed");
+  }
+  
+  shipping.scheduleDelivery(order.address);
+  notification.sendEmail(order.email, "Order confirmed");
+}
+```
+
+**Problems:**
+
+- Client must know about all subsystems
+- Complex orchestration repeated everywhere
+- Hard to maintain
+- Tight coupling
+
+---
+
+## What Is Wrong With This Approach?
+
+- **Too complex** — clients need to understand the entire subsystem
+- **Repeated code** — same orchestration logic everywhere
+- **Tight coupling** — clients depend on multiple classes
+- **Hard to change** — modifying workflow requires changing all clients
+
+---
+
+## The Idea Behind the Pattern
+
+Create a **Facade** that:
+
+1. Provides a simple method (e.g., `placeOrder()`)
+2. Internally handles all the complex subsystem calls
+3. Hides the complexity from clients
+
+Clients only interact with the Facade.
+
+---
+
+## Structure
+
+```text
+        Client
+           │
+           │ uses simple interface
+           ▼
+        Facade ──────┐
+           │         │
+           │         │ orchestrates
+           ▼         ▼
+    ┌──────────┬──────────┬──────────┐
+    │ SystemA  │ SystemB  │ SystemC  │
+    └──────────┴──────────┴──────────┘
+         Complex Subsystem
+```
+
+**Key parts:**
+
+- **Facade** — simple interface to complex subsystem
+- **Subsystem classes** — complex internal components
+- **Client** — uses only the Facade
+
+---
+
+## Simple Real-World Analogy
+
+Think of a **restaurant**.
+
+- You (client) don't go to the kitchen, talk to suppliers, or manage inventory
+- You just tell the **waiter** (Facade) what you want
+- The waiter coordinates with the kitchen, chef, and suppliers
+
+The waiter is the Facade — a simple interface to a complex restaurant operation.
+
+---
+
+## TypeScript Example
+
+### Step 1: Complex Subsystem
+
+```ts
+class InventorySystem {
+  checkStock(productId: string): boolean {
+    console.log(`Checking stock for ${productId}`);
+    return true;
+  }
+  
+  reserveItem(productId: string): void {
+    console.log(`Reserving ${productId}`);
+  }
+}
+
+class PaymentSystem {
+  processPayment(amount: number): boolean {
+    console.log(`Processing payment: $${amount}`);
+    return true;
+  }
+}
+
+class ShippingSystem {
+  scheduleDelivery(address: string): void {
+    console.log(`Scheduling delivery to ${address}`);
+  }
+}
+
+class NotificationSystem {
+  sendConfirmation(email: string): void {
+    console.log(`Sending confirmation to ${email}`);
+  }
+}
+```
+
+### Step 2: Create the Facade
+
+```ts
+class OrderFacade {
+  private inventory: InventorySystem;
+  private payment: PaymentSystem;
+  private shipping: ShippingSystem;
+  private notification: NotificationSystem;
+
+  constructor() {
+    this.inventory = new InventorySystem();
+    this.payment = new PaymentSystem();
+    this.shipping = new ShippingSystem();
+    this.notification = new NotificationSystem();
+  }
+
+  placeOrder(order: {
+    productId: string;
+    amount: number;
+    address: string;
+    email: string;
+  }): void {
+    console.log("Processing order...");
+    
+    // Step 1: Check inventory
+    if (!this.inventory.checkStock(order.productId)) {
+      throw new Error("Out of stock");
+    }
+    
+    // Step 2: Reserve item
+    this.inventory.reserveItem(order.productId);
+    
+    // Step 3: Process payment
+    if (!this.payment.processPayment(order.amount)) {
+      throw new Error("Payment failed");
+    }
+    
+    // Step 4: Schedule delivery
+    this.shipping.scheduleDelivery(order.address);
+    
+    // Step 5: Send notification
+    this.notification.sendConfirmation(order.email);
+    
+    console.log("Order placed successfully!");
+  }
+}
+```
+
+### Step 3: Use the Facade
+
+```ts
+// Client code is simple
+const orderService = new OrderFacade();
+
+orderService.placeOrder({
+  productId: "laptop-123",
+  amount: 1200,
+  address: "123 Main St",
+  email: "user@example.com",
+});
+
+// All complexity is hidden!
+```
+
+---
+
+## How the Pattern Solves the Problem
+
+| Before (Direct Access) | After (Facade) |
+|---|---|
+| Client knows all subsystems | Client knows only Facade |
+| Complex orchestration repeated | Orchestration in one place |
+| Tight coupling | Loose coupling |
+| Hard to change | Easy to change |
+
+---
+
+## Advantages
+
+✅ **Simplicity** — clients use a simple interface  
+✅ **Decoupling** — clients don't depend on subsystem details  
+✅ **Easier maintenance** — changes are centralized  
+✅ **Readability** — clear, high-level API  
+
+---
+
+## Disadvantages
+
+⚠️ **God object risk** — Facade can become too large  
+⚠️ **Limited flexibility** — may not expose all subsystem features  
+
+---
+
+## When Should I Use It?
+
+Use Facade when:
+
+✅ You have a complex subsystem with many classes  
+✅ You want to provide a simple interface  
+✅ You want to decouple clients from subsystem details  
+✅ You're building a library or API  
+
+**Common use cases:**
+
+- **API wrappers** (simplify third-party APIs)
+- **Database layers** (hide query complexity)
+- **Framework utilities** (Express, React)
+- **Complex workflows** (checkout, registration)
+
+---
+
+## When Should I NOT Use It?
+
+Avoid Facade when:
+
+❌ The subsystem is already simple  
+❌ Clients need full access to subsystem features  
+
+---
+
+## Real-World Examples
+
+### 1. Database Facade
+
+```ts
+// Complex database operations
+class QueryBuilder { /* ... */ }
+class Connection { /* ... */ }
+class Transaction { /* ... */ }
+
+// Facade
+class DatabaseFacade {
+  private connection: Connection;
+  private queryBuilder: QueryBuilder;
+
+  constructor(connectionString: string) {
+    this.connection = new Connection(connectionString);
+    this.queryBuilder = new QueryBuilder();
+  }
+
+  async findUserByEmail(email: string): Promise<User> {
+    const query = this.queryBuilder
+      .select('*')
+      .from('users')
+      .where('email', '=', email)
+      .build();
+    
+    return this.connection.execute(query);
+  }
+
+  async createUser(userData: UserData): Promise<User> {
+    const transaction = await this.connection.beginTransaction();
+    try {
+      const user = await transaction.insert('users', userData);
+      await transaction.commit();
+      return user;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+}
+
+// Usage
+const db = new DatabaseFacade('postgresql://...');
+const user = await db.findUserByEmail('alice@example.com');
+```
+
+---
+
+### 2. Video Conversion Facade
+
+```ts
+class VideoConverter {
+  convert(filename: string, format: string): void {
+    console.log(`Converting ${filename} to ${format}`);
+    
+    // Hide complexity
+    const file = new VideoFile(filename);
+    const sourceCodec = new CodecFactory().extract(file);
+    const destinationCodec = new CodecFactory().create(format);
+    const buffer = BitrateReader.read(filename, sourceCodec);
+    const result = BitrateReader.convert(buffer, destinationCodec);
+    
+    result.save(`output.${format}`);
+  }
+}
+
+// Usage
+const converter = new VideoConverter();
+converter.convert('video.mp4', 'avi');
+```
+
+---
+
+### 3. Computer Facade
+
+```ts
+class CPU {
+  freeze(): void { console.log("CPU freezing"); }
+  jump(position: number): void { console.log(`Jumping to ${position}`); }
+  execute(): void { console.log("Executing"); }
+}
+
+class Memory {
+  load(position: number, data: string): void {
+    console.log(`Loading data at ${position}`);
+  }
+}
+
+class HardDrive {
+  read(lba: number, size: number): string {
+    console.log(`Reading ${size} bytes from ${lba}`);
+    return "boot data";
+  }
+}
+
+class ComputerFacade {
+  private cpu: CPU;
+  private memory: Memory;
+  private hardDrive: HardDrive;
+
+  constructor() {
+    this.cpu = new CPU();
+    this.memory = new Memory();
+    this.hardDrive = new HardDrive();
+  }
+
+  start(): void {
+    console.log("Starting computer...");
+    this.cpu.freeze();
+    this.memory.load(0, this.hardDrive.read(0, 1024));
+    this.cpu.jump(0);
+    this.cpu.execute();
+    console.log("Computer started!");
+  }
+}
+
+// Usage
+const computer = new ComputerFacade();
+computer.start(); // Simple!
+```
+
+---
+
+## Common Mistakes
+
+### Mistake 1: Facade Exposes Subsystem
+
+```ts
+// ❌ Leaking subsystem details
+class OrderFacade {
+  getInventorySystem() {
+    return this.inventory; // ❌ Exposing subsystem
+  }
+}
+
+// ✅ Hide subsystem completely
+class OrderFacade {
+  checkStock(productId: string) {
+    return this.inventory.check(productId);
+  }
+}
+```
+
+---
+
+### Mistake 2: Facade Becomes God Object
+
+```ts
+// ❌ Too many responsibilities
+class AppFacade {
+  placeOrder() { /* ... */ }
+  registerUser() { /* ... */ }
+  sendEmail() { /* ... */ }
+  generateReport() { /* ... */ }
+  // 50 more methods...
+}
+
+// ✅ Multiple focused facades
+class OrderFacade { /* ... */ }
+class UserFacade { /* ... */ }
+class EmailFacade { /* ... */ }
+```
+
+---
+
+## Common Misconceptions
+
+### "Facade and Adapter are the same"
+
+No.
+
+- **Facade** simplifies a complex interface (many-to-one)
+- **Adapter** makes interfaces compatible (one-to-one translation)
+
+### "Facade must hide everything"
+
+No. Facade provides a **simple interface**, but can still allow direct access to subsystems if needed.
+
+---
+
+## Related SOLID Principles
+
+### Single Responsibility Principle (SRP)
+
+⚠️ Be careful — Facade can violate SRP if it does too much.
+
+### Dependency Inversion Principle (DIP)
+
+✅ Clients depend on Facade interface, not concrete subsystems.
+
+---
+
+## Related Design Patterns
+
+### Adapter
+
+**Difference:** Adapter translates interfaces. Facade simplifies them.
+
+### Decorator
+
+**Difference:** Decorator adds behavior. Facade simplifies access.
+
+---
+
+## Interview Questions
+
+**Q1: What is the Facade pattern?**  
+A: A structural pattern that provides a simple, unified interface to a complex subsystem.
+
+**Q2: What's the difference between Facade and Adapter?**  
+A: Facade simplifies a complex interface. Adapter makes incompatible interfaces compatible.
+
+**Q3: When would you use Facade?**  
+A: When you have a complex subsystem and want to provide a simple interface to clients.
+
+**Q4: Give a real-world example.**  
+A: A waiter in a restaurant (Facade) simplifies interaction with the complex kitchen operation, or an API wrapper that simplifies a complex third-party API.
+
+---
+
+## Interview Answer (30 Seconds)
+
+> "Facade is a structural pattern that provides a simple interface to a complex subsystem. It hides complexity by wrapping multiple subsystem classes behind a single, clean API. Clients only interact with the Facade, not the subsystem directly. This decouples clients from subsystem details and makes the system easier to use. Common examples include database wrappers, API wrappers, and complex workflow simplification like order processing or video conversion."
+
+---
+
+## Quick Revision
+
+- Facade **simplifies** complex subsystems
+- Provides **unified interface** to many classes
+- **Hides complexity** from clients
+- **Decouples** clients from subsystem
+- Common in: **APIs, databases, frameworks**
+- Different from **Adapter** (translates) and **Decorator** (adds behavior)
+- Can become **God Object** if not careful
+
+---
+
+## One-Line Memory Trick
+
+**"Facade is like a waiter — a simple interface to a complex restaurant operation."**

@@ -53,7 +53,7 @@ export default function SidebarSection({
               key={group.title}
               group={group}
               activeHref={activeHref}
-              defaultOpen
+              defaultOpen={false}
               onNavigate={onNavigate}
             />
           ))}

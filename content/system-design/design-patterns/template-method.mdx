@@ -1,0 +1,83 @@
+---
+title: "Template Method Pattern"
+description: "Define the skeleton of an algorithm in a method, deferring some steps to subclasses. Template Method lets subclasses redefine certain steps of an algorithm without changing its structure."
+difficulty: "beginner"
+readingTime: "10 mins"
+lastUpdated: "September 2026"
+category: "design-patterns"
+tags: ["behavioral", "template-method", "beginner"]
+prerequisites: ["oop"]
+relatedTopics: ["strategy"]
+summary: "Template Method defines an algorithm skeleton in a base class, letting subclasses override specific steps."
+---
+
+## Pattern Information
+
+**Category:** Behavioral  
+**Difficulty:** 🟢 Beginner  
+
+---
+
+## What Is Template Method?
+
+Template Method defines the **skeleton** of an algorithm. Subclasses override specific steps without changing the overall structure.
+
+<Callout type="definition">
+  **Template Method** = Define algorithm structure, let subclasses fill in steps.
+</Callout>
+
+---
+
+## TypeScript Example
+
+```ts
+abstract class DataParser {
+  // Template method
+  parse() {
+    this.openFile();
+    this.extractData();
+    this.parseData();
+    this.closeFile();
+  }
+  
+  openFile() {
+    console.log('Opening file');
+  }
+  
+  abstract extractData(): void; // Subclass implements
+  abstract parseData(): void;   // Subclass implements
+  
+  closeFile() {
+    console.log('Closing file');
+  }
+}
+
+class CSVParser extends DataParser {
+  extractData() {
+    console.log('Extracting CSV data');
+  }
+  
+  parseData() {
+    console.log('Parsing CSV');
+  }
+}
+
+// Usage
+const parser = new CSVParser();
+parser.parse(); // Calls template method
+```
+
+---
+
+## When to Use
+
+✅ You have an algorithm with invariant and variant parts  
+✅ Subclasses should customize specific steps  
+
+**Common:** Frameworks (React lifecycle), data processing pipelines.
+
+---
+
+## One-Line Memory Trick
+
+**"Template Method is like a recipe — steps are defined, but you choose the ingredients."**
